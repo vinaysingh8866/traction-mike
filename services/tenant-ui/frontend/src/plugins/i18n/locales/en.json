@@ -14,13 +14,13 @@
       "imageCreated": "Image created at",
       "imageTag": "Image tag",
       "imageVersion": "Image version",
-      "info": "Version/hosting information for TRACTION",
-      "repository": "GitHub repo for Traction",
+      "info": "Version/hosting information for DigiCred CrMS",
+      "repository": "GitHub repo for DigiCred CrMS",
       "swagger": "Swagger URL",
-      "traction": "Traction",
-      "tractionVersion": "Traction version {version}",
+      "traction": "DigiCred CrMS",
+      "tractionVersion": "DigiCred CrMS version {version}",
       "uiVersion": "Tenant UI version {version}",
-      "url": "Traction URL"
+      "url": "DigiCred CrMS URL"
     }
   },
   "admin": {
@@ -240,14 +240,14 @@
   "dashboard": {
     "backToDashboard": "Back to Dashboard",
     "dashboard": "Dashboard",
-    "greeting": "Powered by Traction"
+    "greeting": "DigiCred CrMS"
   },
   "holder": {
     "holder": "Holder"
   },
   "home": {
     "dashboard": "Dashboard",
-    "greeting": "Powered by Traction",
+    "greeting": "DigiCred CrMS",
     "login": {
       "id": "Wallet ID",
       "secret": "Wallet Key",
@@ -453,7 +453,7 @@
       "showWrite": "Show 'Write' Components",
       "tenantUi": "Tenant UI"
     },
-    "tractionProxy": "Traction Proxy URL"
+    "tractionProxy": "DigiCred CrMS Proxy URL"
   },
   "session": {
     "countdown": "You are going to be logged out in { seconds } seconds...",

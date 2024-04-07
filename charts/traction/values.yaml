@@ -603,29 +603,29 @@ ui:
   ##
   ux:
     ## @param ui.ux.appTitle Title of the application
-    appTitle: "Traction Tenant Console"
+    appTitle: "DigiCred CrMS Tenant Console"
     ## @param ui.ux.appInnkeeperTitle Title of the Innkeeper Console
-    appInnkeeperTitle: "Traction Innkeeper Console"
+    appInnkeeperTitle: "DigiCred CrMS Innkeeper Console"
     ## @param ui.ux.sidebarTitle Sidebar title
-    sidebarTitle: "Traction"
+    sidebarTitle: "DigiCred CrMS"
     ## @param ui.ux.copyright
     copyright: ""
     ## @param ui.ux.owner
     owner: ""
     ## @param ui.ux.coverImageCopyright
-    coverImageCopyright: "Photo by Kristoffer Fredriksson on StockSnap"
+    coverImageCopyright: "Photo by Jason W on Unsplash"
 
     ## About Business page settings
     ##
     aboutBusiness:
       ## @param ui.ux.aboutBusiness.title
-      title: "Government of British Columbia"
+      title: "DigiCred Holdings"
       ## @param ui.ux.aboutBusiness.linkTitle
-      linkTitle: "BC Digital Trust Service Agreement"
+      linkTitle: "DigiCred Holdings"
       ## @param ui.ux.aboutBusiness.link
-      link: "https://github.com/bcgov/bc-vcpedia/blob/main/agents/bc-gov-agent-service.md"
+      link: "https://github.com/DigiCred-Holdings/traction"
       ## @param ui.ux.aboutBusiness.imageUrl
-      imageUrl: "/img/bc/bc_logo.png"
+      imageUrl: "/img/digicred/digicred.png"
 
     ## Information banner settings
     ##

@@ -1,7 +1,7 @@
 export const RESERVATION_RECIEVED_TENANT_TEMPLATE = `
 <p>
   Hello <%= it.body.contactName _%>,<br />Thank you for your request to join
-  Traction
+  DigiCred CrMS
 </p>
 <p>
   This email confirms we have received your request and a Representative is
@@ -17,9 +17,9 @@ export const RESERVATION_RECIEVED_TENANT_TEMPLATE = `
   Please do not forward this email as it contains private information intended
   only for you. Please do not reply to this email.
 </p>
-<p>Thank you for choosing Traction!</p>
+<p>Thank you for choosing DigiCred CrMS!</p>
 <p>
   Best regards <br />
-  Traction Team
+  DigiCred CrMS Team
 </p>
 `;

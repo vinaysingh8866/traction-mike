@@ -73,7 +73,7 @@
         <template #body="{ data }">
           <span v-if="data.bundle">
             <i
-              v-tooltip="'Bundle JSON stored in Traction, expand row to view'"
+              v-tooltip="'Bundle JSON stored in DigiCred CrMS, expand row to view'"
               class="pi pi-database"
             >
             </i>

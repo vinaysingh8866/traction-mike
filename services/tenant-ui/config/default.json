@@ -22,17 +22,17 @@
       "extraQueryParams": {}
     },
     "ux": {
-      "appTitle": "Traction Tenant Console",
-      "appInnkeeperTitle": "Traction Innkeeper Console",
-      "sidebarTitle": "TRACTION",
+      "appTitle": "DigiCred CrMS Tenant Console",
+      "appInnkeeperTitle": "DigiCred CrMS Innkeeper Console",
+      "sidebarTitle": "DigiCred CrMS",
       "copyright": "",
       "owner": "",
-      "coverImageCopyright": "Photo by Kristoffer Fredriksson on StockSnap",
+      "coverImageCopyright": "Photo by Jason W on Unsplash",
       "aboutBusiness": {
-        "title": "Government of British Columbia",
-        "linkTitle": "BC Digital Trust Service Agreement",
-        "link": "https://github.com/bcgov/bc-vcpedia/blob/main/agents/bc-gov-agent-service.md",
-        "imageUrl": "/img/bc/bc_logo.png"
+        "title": "DigiCred Holdings",
+        "linkTitle": "DigiCred Holdings",
+        "link": "https://github.com/DigiCred-Holdings/traction",
+        "imageUrl": "/img/digicred/digicred.png"
       },
       "infoBanner": {
         "message": "",
@@ -69,8 +69,8 @@
       "secure": false,
       "user": "",
       "password": "",
-      "senderAddress": "DoNotReplyTraction@gov.bc.ca",
-      "innkeeperInbox": "lucas.o'neil@gov.bc.ca"
+      "senderAddress": "DoNotReplyCrMS@digicred.co",
+      "innkeeperInbox": "dave@digicred.co"
     }
   }
 }

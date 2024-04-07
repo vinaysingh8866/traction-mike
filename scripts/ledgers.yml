@@ -2,11 +2,11 @@
   is_production: true
   is_write: true
   genesis_url: 'http://test.bcovrin.vonx.io/genesis'
-  endorser_did: 'SVfHGCEEvEFmpBPcxgNqRR'
+  endorser_did: '7J2doVr9uXjBiNzqNqxS5N'
   endorser_alias: 'bcovrin-test-endorser'
 - id: bcovrin-test-1
   is_production: true
   is_write: true
   genesis_url: 'http://test.bcovrin.vonx.io/genesis'
-  endorser_did: 'SVfHGCEEvEFmpBPcxgNqRR'
+  endorser_did: 'BjsXtPhnhFz1AgyVRrUmf4'
   endorser_alias: 'bcovrin-test-endorser-1'

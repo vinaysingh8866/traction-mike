@@ -16,6 +16,6 @@ export const RESERVATION_RECIEVED_INNKEEPER_TEMPLATE = `
 </p>
 <p>
   Best regards <br />
-  Traction Team
+  DigiCred CrMS Team
 </p>
 `;

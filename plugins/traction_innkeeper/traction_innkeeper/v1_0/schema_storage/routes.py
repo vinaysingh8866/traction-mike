@@ -183,6 +183,6 @@ def post_process_routes(app: web.Application):
     app._state["swagger_dict"]["tags"].append(
         {
             "name": SWAGGER_CATEGORY,
-            "description": "Traction Schema Storage - Local storage of schema metadata (traction_innkeeper/schema_storage v1_0 plugin)",
+            "description": "DigiCred CrMS Schema Storage - Local storage of schema metadata (traction_innkeeper/schema_storage v1_0 plugin)",
         }
     )

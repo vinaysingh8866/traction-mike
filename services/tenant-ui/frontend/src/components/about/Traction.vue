@@ -11,7 +11,7 @@
     </div>
 
     <div class="col-12 md:col-6 flex justify-content-end pt-0">
-      <img src="/img/logo/traction-logo-bc-text.svg" class="logo-trac" />
+      <img src="/img/digicred/CrMS.svg" class="logo-trac" />
     </div>
   </div>
 
