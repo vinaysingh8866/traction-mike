@@ -6,7 +6,7 @@ exports[`Traction > mount matches snapshot with expected values 1`] = `
     <p data-v-0f0f6735="" class="my-0">about.traction.tractionVersion</p>
     <p data-v-0f0f6735="" class="mt-0">about.traction.uiVersion</p>
   </div>
-  <div data-v-0f0f6735="" class="col-12 md:col-6 flex justify-content-end pt-0"><img data-v-0f0f6735="" src="/img/logo/traction-logo-bc-text.svg" class="logo-trac"></div>
+  <div data-v-0f0f6735="" class="col-12 md:col-6 flex justify-content-end pt-0"><img data-v-0f0f6735="" src="/img/digicred/CrMS.svg" class="logo-trac"></div>
 </div>
 <div data-v-0f0f6735="" class="grid">
   <div data-v-0f0f6735="" class="col-2">about.traction.url</div>

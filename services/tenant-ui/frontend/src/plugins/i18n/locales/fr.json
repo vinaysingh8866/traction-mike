@@ -14,13 +14,13 @@
       "imageCreated": "Image created at <FR>",
       "imageTag": "Image tag <FR>",
       "imageVersion": "Image version <FR>",
-      "info": "Version/hosting information for TRACTION <FR>",
-      "repository": "GitHub repo for Traction <FR>",
+      "info": "Version/hosting information for DigiCred CrMS <FR>",
+      "repository": "GitHub repo for DigiCred CrMS <FR>",
       "swagger": "Swagger URL <FR>",
-      "traction": "Traction <FR>",
-      "tractionVersion": "Traction version {version} <FR>",
+      "traction": "DigiCred CrMS <FR>",
+      "tractionVersion": "DigiCred CrMS version {version} <FR>",
       "uiVersion": "Tenant UI version {version} <FR>",
-      "url": "Traction URL <FR>"
+      "url": "DigiCred CrMS URL <FR>"
     }
   },
   "admin": {
@@ -240,14 +240,14 @@
   "dashboard": {
     "backToDashboard": "Back to Dashboard <FR>",
     "dashboard": "Dashboard <FR>",
-    "greeting": "Powered by Traction <FR>"
+    "greeting": "DigiCred CrMS <FR>"
   },
   "holder": {
     "holder": "Holder <FR>"
   },
   "home": {
     "dashboard": "Dashboard <FR>",
-    "greeting": "Powered by Traction <FR>",
+    "greeting": "DigiCred CrMS <FR>",
     "login": {
       "id": "Wallet ID <FR>",
       "secret": "Wallet Key <FR>",
@@ -458,7 +458,7 @@
       "showWrite": "Show 'Write' Components: <FR>",
       "tenantUi": "Tenant UI <FR>"
     },
-    "tractionProxy": "Traction Proxy URL: <FR>"
+    "tractionProxy": "DigiCred CrMS Proxy URL: <FR>"
   },
   "session": {
     "countdown": "Vous allez être déconnecté dans { seconds } secondes...",

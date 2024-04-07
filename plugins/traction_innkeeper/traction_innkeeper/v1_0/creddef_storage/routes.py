@@ -146,6 +146,6 @@ def post_process_routes(app: web.Application):
     app._state["swagger_dict"]["tags"].append(
         {
             "name": SWAGGER_CATEGORY,
-            "description": "Traction Credential Definition Storage - Local storage of credential definition metadata (traction_innkeeper/creddef_storage v1_0 plugin)",
+            "description": "DigiCred CrMS Credential Definition Storage - Local storage of credential definition metadata (traction_innkeeper/creddef_storage v1_0 plugin)",
         }
     )

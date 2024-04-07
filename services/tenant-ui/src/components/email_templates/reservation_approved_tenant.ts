@@ -18,7 +18,7 @@ export const RESERVATION_APPROVED_TENANT_TEMPLATE = `
   re-issue upon request.
 </p>
 <p>
-  Traction will never contact you to ask for details about your login
+  DigiCred CrMS will never contact you to ask for details about your login
   credentials.
 </p>
 <p>
@@ -27,6 +27,6 @@ export const RESERVATION_APPROVED_TENANT_TEMPLATE = `
 </p>
 <p>
   Best regards <br />
-  Traction Team
+  DigiCred CrMS Team
 </p>
 `;

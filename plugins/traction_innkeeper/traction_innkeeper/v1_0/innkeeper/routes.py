@@ -1073,6 +1073,6 @@ def post_process_routes(app: web.Application):
     app._state["swagger_dict"]["tags"].append(
         {
             "name": SWAGGER_CATEGORY,
-            "description": "Traction Innkeeper - manage tenants (traction_innkeeper v1_0 plugin)",
+            "description": "DigiCred CrMS Innkeeper - manage tenants (traction_innkeeper v1_0 plugin)",
         }
     )

@@ -4,7 +4,7 @@ export const RESERVATION_DECLINED_TENANT_TEMPLATE = `
   Your Reservation Number (<%= it.body.reservationId _%>) has been updated.
 </p>
 <p>
-  Thank you for your interest in joining Traction. We regret to inform you that
+  Thank you for your interest in joining DigiCred CrMS. We regret to inform you that
   your request has been declined.
 </p>
 <p>
@@ -21,6 +21,6 @@ export const RESERVATION_DECLINED_TENANT_TEMPLATE = `
 </p>
 <p>
   Best regards <br />
-  Traction Team
+  DigiCred CrMS Team
 </p>
 `;

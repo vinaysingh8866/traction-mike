@@ -10,7 +10,7 @@
       >
         <Business />
       </AccordionTab>
-      <AccordionTab header="Traction">
+      <AccordionTab header="DigiCred CrMS">
         <Traction />
       </AccordionTab>
       <AccordionTab header="ACA-Py">
