@@ -20,15 +20,15 @@ if [[ "${TRACTION_ENV}" == "local" ]]; then
 	export ACAPY_ENDPOINT=$NGROK_ENDPOINT
 fi
 
-export ACAPY_ENDPOINT=http://192.168.2.192:8030
-
-echo "fetched end point [$ACAPY_ENDPOINT]"
-
-echo "Starting aca-py agent ..."
+#echo "fetched end point [$ACAPY_ENDPOINT]"
 
 
 # ... if you want to echo the aca-py startup command ...
 # set -x
+
+export ACAPY_ENDPOINT=http://192.168.2.15:8030
+echo "fetched end point [$ACAPY_ENDPOINT]"
+echo "Starting aca-py agent ..."
 
 exec aca-py start \
     --inbound-transport http "0.0.0.0" ${TRACTION_ACAPY_HTTP_PORT} \
