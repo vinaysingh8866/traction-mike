@@ -4,9 +4,17 @@
       <Accordion :multiple="true">
         <AccordionTab header="Onboarding Form">
           <form @submit.prevent="submitForm" class="onboarding-form">
-            <div class="form-group">
+            <div class="form-group student-id-group">
               <label for="studentId">{{ $t('onboarding.studentId') }}</label>
-              <InputText id="studentId" v-model="studentId" required />
+              <div class="input-and-button">
+                <InputText id="studentId" v-model="studentId" required />
+                <Button
+                  :label="$t('onboarding.idLookup')"
+                  icon="pi pi-search"
+                  class="button-id-lookup"
+                  @click="idLookup"
+                />
+              </div>
             </div>
             <div class="form-group">
               <label for="fullName">{{ $t('onboarding.fullName') }}</label>
@@ -33,6 +41,8 @@
   </div>
 </template>
 
+
+
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -48,30 +58,48 @@ const fullName = ref('');
 
 function submitForm() {
   console.log('Submitting:', { studentId: studentId.value, fullName: fullName.value });
-  // Add actual submission logic here
 }
 
 function clearForm() {
   studentId.value = '';
   fullName.value = '';
 }
+
+function idLookup() {
+  console.log('Looking up ID:', studentId.value);
+}
 </script>
 
 <style scoped>
 .onboarding-container {
-  padding: 20px; /* Adds padding around the form */
+  padding: 20px;
 }
 
 .onboarding-form {
-  max-width: 650px; /* Increase the max-width by 30% over a typical 500px base */
+  max-width: 650px;
 }
 
 .form-group {
   margin-bottom: 20px;
 }
 
+.student-id-group .input-and-button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end; 
+}
+
+.student-id-group input {
+  width: 100%;
+}
+
+.button-id-lookup {
+  margin-top: 8px; 
+  width: auto; 
+}
+
 .form-group input {
-  width: 100%; /* Ensures input fields take full width of the form group */
+  width: 100%;
 }
 
 label {
@@ -81,28 +109,27 @@ label {
 
 .form-actions {
   display: flex;
-  justify-content: space-between; /* Positions the buttons at the edges */
+  justify-content: space-between;
 }
 
 .button-clear {
-  margin-right: auto; /* Pushes the clear button to the left */
+  margin-right: auto;
 }
 
 .button-submit {
-  margin-left: auto; /* Keeps the submit button on the right */
+  margin-left: auto;
 }
 
-/* Responsive Design Adjustments */
 @media (max-width: 768px) {
   .onboarding-form {
-    max-width: 100%; /* Allows the form to expand to full width on smaller screens */
+    max-width: 100%;
   }
   .form-group input,
   .form-actions button {
-    width: 100%; /* Makes buttons and inputs full width */
+    width: 100%;
   }
   .form-actions {
-    flex-direction: column; /* Stacks the buttons vertically on small screens */
+    flex-direction: column;
     align-items: stretch;
   }
   .button-clear,
@@ -110,7 +137,10 @@ label {
     margin-top: 10px;
   }
   .button-submit {
-    margin-left: 0; /* Aligns the button correctly in the column layout */
+    margin-left: 0;
+  }
+  .student-id-group .input-and-button {
+    align-items: stretch; 
   }
 }
 </style>
