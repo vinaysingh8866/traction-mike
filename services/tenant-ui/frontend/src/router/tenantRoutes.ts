@@ -2,6 +2,7 @@
 import Dashboard from '@/views/Dashboard.vue';
 import About from '@/views/About.vue';
 import Onboarding from '@/views/Onboarding.vue';
+import Transcript from '@/views/transcript/Transcript.vue';
 // Tenant
 import TenantUi from '@/views/TenantUi.vue';
 import Profile from '@/views/tenant/Profile.vue';
@@ -41,6 +42,12 @@ const tenantRoutes = [
         path: '/onboarding',
         name: 'onboarding',
         component: Onboarding,
+      },
+      // About
+      {
+        path: '/transcript',
+        name: 'transcript',
+        component: Transcript,
       },
 
       // About

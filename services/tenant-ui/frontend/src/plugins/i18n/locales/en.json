@@ -7,6 +7,13 @@
     "clear": "Clear",
     "idLookup": "ID Look Up"
   },
+  "transcript": {
+    "transcript": "Transcript",
+    "schema": "Schema",
+    "submit": "Submit",
+    "clear": "Clear",
+    "schemaLookup": "Schema Look Up"
+  },
   "about": {
     "about": "About",
     "acaPy": {
