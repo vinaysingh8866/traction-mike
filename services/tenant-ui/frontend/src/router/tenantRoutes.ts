@@ -1,6 +1,7 @@
 // Main dashboard
 import Dashboard from '@/views/Dashboard.vue';
 import About from '@/views/About.vue';
+import Onboarding from '@/views/Onboarding.vue';
 // Tenant
 import TenantUi from '@/views/TenantUi.vue';
 import Profile from '@/views/tenant/Profile.vue';
@@ -34,6 +35,13 @@ const tenantRoutes = [
     component: TenantUi,
     children: [
       { path: 'dashboard', name: 'Dashboard', component: Dashboard },
+
+      // About
+      {
+        path: '/onboarding',
+        name: 'onboarding',
+        component: Onboarding,
+      },
 
       // About
       {

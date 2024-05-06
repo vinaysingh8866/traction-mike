@@ -35,6 +35,11 @@ const items = ref([
     route: '/dashboard',
   },
   {
+    label: t('onboarding.onboarding'),
+    icon: 'pi pi-fw pi-user-plus',
+    route: '/onboarding',
+  },
+  {
     label: t('connect.connections.connections'),
     icon: 'pi pi-fw pi-users',
     items: [
