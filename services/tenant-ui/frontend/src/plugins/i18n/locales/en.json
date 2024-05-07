@@ -1,4 +1,12 @@
 {
+  "onboarding": {
+    "onboarding": "Onboarding",
+    "studentId": "Student ID",
+    "fullName": "Full Name",
+    "submit": "Submit",
+    "clear": "Clear",
+    "idLookup": "ID Look Up"
+  },
   "about": {
     "about": "About",
     "acaPy": {
