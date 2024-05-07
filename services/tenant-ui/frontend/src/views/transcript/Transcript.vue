@@ -16,6 +16,34 @@
                 />
               </div>
             </div>
+            <!-- Only display this section if fetchedSchema has been set -->
+            <div v-if="fetchedSchema">
+              <div
+                v-if="
+                  fetchedSchema.schema &&
+                  fetchedSchema.schema.attrNames &&
+                  fetchedSchema.schema.attrNames.length > 0
+                "
+              >
+                <h3>{{ $t('transcript.details') }}</h3>
+                <div>
+                  <strong>{{ $t('transcript.attributes') }}</strong>
+                  <ul>
+                    <li
+                      v-for="attrName in fetchedSchema.schema.attrNames"
+                      :key="attrName"
+                    >
+                      {{ attrName }}
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div v-else>
+                <strong>{{ $t('transcript.attributes') }}</strong>
+                {{ $t('transcript.noAttributes') }}
+              </div>
+            </div>
+
             <div class="form-actions">
               <Button
                 :label="$t('transcript.clear')"
@@ -38,16 +66,35 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, Ref } from 'vue';
+import { useGovernanceStore } from '@/store/governanceStore';
 import { useI18n } from 'vue-i18n';
 import Accordion from 'primevue/accordion';
 import AccordionTab from 'primevue/accordiontab';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import MainCardContent from '@/components/layout/mainCard/MainCardContent.vue';
+import { SchemaStorageRecord, Schema } from '@/types/acapyApi/acapyInterface';
+
+import {
+  Schema as BaseSchema,
+  SchemaStorageRecord as BaseSchemaStorageRecord,
+} from '@/types/acapyApi/acapyInterface';
+
+// Extend the original Schema to include detailed property types
+interface ExtendedSchema extends BaseSchema {
+  attrNames?: string[];
+}
+
+// Extend the SchemaStorageRecord to use ExtendedSchema
+interface ExtendedSchemaStorageRecord extends BaseSchemaStorageRecord {
+  schema?: ExtendedSchema;
+}
 
 const { t } = useI18n();
 const schema = ref('');
+const fetchedSchema: Ref<ExtendedSchemaStorageRecord | null> = ref(null);
+const { getStoredSchemas } = useGovernanceStore();
 
 function submitForm() {
   console.log('Submitting:', {
@@ -57,10 +104,18 @@ function submitForm() {
 
 function clearForm() {
   schema.value = '';
+  fetchedSchema.value = null; // Reset the fetchedSchema to clear displayed details
 }
 
-function schemaLookup() {
-  console.log('Looking up Schema:', schema.value);
+async function schemaLookup() {
+  try {
+    const schemas = await getStoredSchemas();
+    const foundSchema = schemas?.find((s) => s.schema_id === schema.value);
+    fetchedSchema.value = foundSchema || null;
+  } catch (error) {
+    console.error('Error fetching schema:', error);
+    fetchedSchema.value = null;
+  }
 }
 </script>
 
