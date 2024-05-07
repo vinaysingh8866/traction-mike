@@ -1,16 +1,32 @@
-FROM node:18-alpine
+# Use a Debian-based Node.js image
+FROM node:18-buster
+
+# Set the working directory in the container
 WORKDIR /usr/src/app
+
+# Copy all files from the current directory to the container
 COPY . .
-# install backend libs
+
+# Install Bash
+RUN apt-get update && apt-get install -y bash
+
+# Install backend libraries
 RUN npm cache clean --force && npm ci
-# install frontend libs
+
+# Install frontend libraries
 RUN cd frontend && npm cache clean --force && npm ci
-# build backend
+
+# Build backend
 RUN npm run build
-# build frontend
+
+# Build frontend
 RUN cd frontend && npm run build
-# these are not needed now, save some space
+
+# Clean up by removing the frontend node_modules directory
 RUN rm -rf frontend/node_modules
 
+# Expose port 8080 for the application
 EXPOSE 8080
+
+# Set the command to run the application
 CMD [ "node", "dist/src/index.js" ]

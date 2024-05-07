@@ -139,8 +139,10 @@ services:
     ###############################################
     # Comment the following out if you want to use the default reservation form
     volumes:
-      - ../services/tenant-ui/config/forms:/usr/src/app/frontend/dist/forms
+      # - ../services/tenant-ui:/usr/src/app # Mount the entire application
+      - ../services/tenant-ui/config/forms:/usr/src/app/frontend/dist/forms # Mount specific forms directory
     ###############################################
+    #command: ["tail", "-f", "/dev/null"] # Keeps container alive without running the main app
     extra_hosts:
       - host.docker.internal:host-gateway
 
