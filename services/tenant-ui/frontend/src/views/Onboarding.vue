@@ -23,9 +23,9 @@
                 <p>{{ $t('onboarding.fetching') }}</p>
               </div>
               <div v-else-if="error" class="center-content">
-                <p class="text-error">{{ $t('onboarding.notFound') }}</p>
+                <p class="text-error">{{ errMessage }}</p>
               </div>
-              <div v-else-if="successMessage" class="center-content">
+              <div v-else-if="studentFullName" class="center-content">
                 <p class="text-success">{{ $t('onboarding.found') }}</p>
               </div>
             </div>
@@ -50,6 +50,11 @@
               />
             </div>
           </form>
+
+          <Dialog v-model:visible="showModal" :modal="true" :style="{ width: '50vw' }" header="QR Code">
+            <QRCode :qr-content="invitation_url"/>
+          </Dialog>
+
         </AccordionTab>
       </Accordion>
     </MainCardContent>
@@ -57,60 +62,74 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useStudentStore } from '@/store/studentStore';
+import { useStudentStore, useConnectionStore } from '@/store';
 import Accordion from 'primevue/accordion';
 import AccordionTab from 'primevue/accordiontab';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
-
-import Dialog from 'primevue/dialog';
-
 import MainCardContent from '@/components/layout/mainCard/MainCardContent.vue';
+import QRCode from '@/components/common/QRCode.vue'; 
+import Dialog from 'primevue/dialog';
 
 const loading = ref(false);
 const error = ref(false);
-let errMessage = null;
-let successMessage = null;
-const dialogVisible = ref(false);
+let errMessage: string = "";
+const invitation_url = ref('');
+const showModal = ref(false);
+const studentFullName = ref('');
+
 const { t } = useI18n();
 const studentId = ref('');
 const fullName = ref('');
-
+const { createInvitation } = useConnectionStore();
 const { idLookup } = useStudentStore();
 
-const submitForm = () => {
-  console.log('Submitting:', { studentId: studentId.value, fullName: fullName.value });
-}
+const submitForm = async () => {
+  studentFullName.value = '';
+  try {
+    const result : any = await createInvitation(`${fullName.value} - ${studentId.value}`, false); // Assume single use invitation
+    if (result && result.invitation_url ) {
+      invitation_url.value = result.invitation_url;
+      console.log(`Invitation URL: ${result.invitation_url}`);
+      showModal.value = true;
+    }
+  } catch (err: any) {
+    console.error('Error during invitation creation:', err.message);
+  }
+};
+
 
 const clearForm = () => {
   studentId.value = '';
   fullName.value = '';
-  error.value = false
-  successMessage = null
+  error.value = false;
+  showModal.value = false;
+  invitation_url.value = "";
+  studentFullName.value = '';
 }
 
 const handleIdLookUp = async () => {
   loading.value = true;
-  dialogVisible.value = true;
+
   try {
     const result = await idLookup(studentId.value);
     if (result && result.studentName) {
       fullName.value = result.studentName.fullName; 
-      successMessage = result.studentName.fullName;
+      studentFullName.value = result.studentName.fullName;
       loading.value = false;
-      dialogVisible.value = false;
+
     } else {
-      error.value = t('onboarding.notFound');
+      errMessage = t('onboarding.notFound');
       throw new Error(t('onboarding.notFound'));
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error('Error during ID Lookup:', err.message);
     loading.value = false;
     error.value = true;
     errMessage = err.message;
-    dialogVisible.value = false; 
+ 
   } 
 };
 
@@ -223,5 +242,10 @@ p {
   .student-id-group .input-and-button {
     align-items: stretch;
   }
+  .qr-code-display {
+  margin-top: 20px;
+  text-align: center;
+}
+
 }
 </style>
