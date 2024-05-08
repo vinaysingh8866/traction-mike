@@ -59,6 +59,50 @@ export const useConnectionStore = defineStore('connection', () => {
     return fetchList(API_PATH.CONNECTIONS, connections, error, loading, {});
   }
 
+  async function idLookup(studentNumber: string) {
+    console.log('> connectionStore.idLookup', studentNumber);
+    loading.value = true;
+    error.value = null;
+    let studentData = null;
+
+
+    // await acapyApi
+    // .postHttp(
+    //   API_PATH.CONNECTIONS_CREATE_INVITATION
+    // )
+    // .then((res) => {
+    //   console.log(res);
+    //   studentData = res.data
+      
+    // })
+    // .then(() => {
+    //   listConnections();
+    // })
+    // .catch((err) => {
+    //   error.value = err;
+    //   // console.log(error.value);
+    // })
+    // .finally(() => {
+    //   loading.value = false;
+    // });
+
+
+  
+    try {
+      // Simulate an API call to fetch student info
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulated delay
+    
+      studentData = { fullName: 'John Doe', studentId: studentNumber }; // Mocked data
+      console.log('ID Lookup result:', studentData);
+    } catch (err) {
+      console.error('ID Lookup failed:', error);
+    } finally {
+      loading.value = false;
+    }
+  
+    return studentData;
+  }
+
   async function createInvitation(alias: string, multiUse: boolean) {
     console.log('> connectionStore.createInvitation');
     error.value = null;
@@ -328,6 +372,7 @@ export const useConnectionStore = defineStore('connection', () => {
     filteredConnections,
     filteredInvitations,
     findConnectionName,
+    idLookup,
     listConnections,
     createInvitation,
     createOobInvitation,
