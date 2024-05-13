@@ -4,15 +4,15 @@
       <Accordion :multiple="true">
         <AccordionTab header="Transcript Form">
           <form class="transcript-form" @submit.prevent="submitForm">
-            <div class="form-group schema-group">
-              <label for="schema">{{ $t('transcript.schema') }}</label>
+            <div class="form-group transcript-group">
+              <label for="studentID">{{ $t('transcript.studentID') }}</label>
               <div class="input-and-button">
                 <InputText id="schema" v-model="schema" required />
                 <Button
-                  :label="$t('transcript.schemaLookup')"
+                  :label="$t('transcript.findTranscript')"
                   icon="pi pi-search"
-                  class="schema-lookup"
-                  @click="schemaLookup"
+                  class="search-transcript"
+                  @click="findTranscript"
                 />
               </div>
             </div>
@@ -81,6 +81,10 @@ import {
   SchemaStorageRecord as BaseSchemaStorageRecord,
 } from '@/types/acapyApi/acapyInterface';
 
+interface MySchema {
+  schema_id: string;
+}
+
 // Extend the original Schema to include detailed property types
 interface ExtendedSchema extends BaseSchema {
   attrNames?: string[];
@@ -107,10 +111,12 @@ function clearForm() {
   fetchedSchema.value = null; // Reset the fetchedSchema to clear displayed details
 }
 
-async function schemaLookup() {
+async function findTranscript() {
   try {
-    const schemas = await getStoredSchemas();
-    const foundSchema = schemas?.find((s) => s.schema_id === schema.value);
+    const schemas: MySchema[] = await getStoredSchemas();
+    const foundSchema = schemas?.find(
+      (s: MySchema) => s.schema_id === schema.value
+    );
     fetchedSchema.value = foundSchema || null;
   } catch (error) {
     console.error('Error fetching schema:', error);
@@ -132,17 +138,17 @@ async function schemaLookup() {
   margin-bottom: 20px;
 }
 
-.schema-group .input-and-button {
+.transcript-group .input-and-button {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
 }
 
-.schema-group input {
+.transcript-group input {
   width: 100%;
 }
 
-.schema-lookup {
+.search-transcript {
   margin-top: 8px;
   width: auto;
 }
@@ -188,7 +194,7 @@ label {
   .button-submit {
     margin-left: 0;
   }
-  .schema-group .input-and-button {
+  .transcript-group .input-and-button {
     align-items: stretch;
   }
 }

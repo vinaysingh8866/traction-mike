@@ -9,10 +9,10 @@
   },
   "transcript": {
     "transcript": "Transcript",
-    "schema": "Schema",
+    "studentID": "Student ID",
     "submit": "Submit",
     "clear": "Clear",
-    "schemaLookup": "Schema Look Up",
+    "findTranscript": "Find Transcript",
     "details": "Transcript Details",
     "id": "ID:",
     "attributes": "Attributes:",
