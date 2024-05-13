@@ -8,7 +8,8 @@
     "idLookup": "ID Look Up",
     "fetching": "Fetching Student Name from Ellucian SIS",
     "notFound":"Student Name not Found in Ellucian SIS",
-    "found":"Successfully fetched the Student Name. Please check the Full Name again before submit"
+    "found":"Successfully fetched the Student Name. Please check the Full Name again before submit",
+    "loadingQRCode":"Loading QR Code..."
   },
   "transcript": {
     "transcript": "Transcript",
