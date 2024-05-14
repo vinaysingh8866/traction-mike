@@ -28,6 +28,10 @@
               <div v-else-if="studentFullName" class="center-content">
                 <p class="text-success">{{ $t('onboarding.found') }}</p>
               </div>
+              <div v-else-if="loadingQRCode" class="center-content">
+                <i class="pi pi-spin pi-spinner" style="font-size: 2em;"></i>
+                <p>{{ $t('onboarding.loadingQRCode') }}</p>
+              </div>
             </div>
             <div class="form-group">
               <label for="fullName">{{ $t('onboarding.fullName') }}</label>
@@ -62,9 +66,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+
+import { ref, onUnmounted } from 'vue';
+import { io } from "socket.io-client";
 import { useI18n } from 'vue-i18n';
-import { useStudentStore, useConnectionStore } from '@/store';
 import Accordion from 'primevue/accordion';
 import AccordionTab from 'primevue/accordiontab';
 import InputText from 'primevue/inputtext';
@@ -72,32 +77,143 @@ import Button from 'primevue/button';
 import MainCardContent from '@/components/layout/mainCard/MainCardContent.vue';
 import QRCode from '@/components/common/QRCode.vue'; 
 import Dialog from 'primevue/dialog';
+import { useStudentStore, useConnectionStore, useIssuerStore, useConfigStore } from '@/store';
+import { useToast } from 'vue-toastification';
+import { defineStore, storeToRefs } from 'pinia';
+import websocketService from '@/services/websocketService';
 
+const { t } = useI18n();
+const studentId = ref('');
+const fullName = ref('');
 const loading = ref(false);
 const error = ref(false);
 let errMessage: string = "";
 const invitation_url = ref('');
 const showModal = ref(false);
 const studentFullName = ref('');
-
-const { t } = useI18n();
-const studentId = ref('');
-const fullName = ref('');
+const loadingQRCode = ref(false);
+let response:any = null;
 const { createInvitation } = useConnectionStore();
 const { idLookup } = useStudentStore();
+const issuerStore = useIssuerStore();
+const toast = useToast();
+const { config } = storeToRefs(useConfigStore());
 
+
+async function issueCredential(details : any) {
+  console.log('Issuing student ID...');
+  try {
+    const attributes = [
+      { name: "Last", value: `${details.studentName.lastName}` },
+      { name: "School", value: 'Cape Fear Community College' },
+      { name: "Expiration", value: '20250101' },
+      { name: "First", value: `${details.studentName.firstName}` },
+      { name: "StudentID", value: `${studentId.value}` },
+      { name: "Middle", value: `${details.studentName.middleName}` },
+    ];
+
+    const payload = {
+      auto_issue: true,
+      auto_remove: false,
+      connection_id: `${details.connection_id}`,
+      cred_def_id: 'N3qds31u5nDEM1jpGD4PMX:3:CL:100:Student-ID-Cape-Fear',
+      credential_preview: {
+        '@type': 'issue-credential/1.0/credential-preview',
+        attributes: attributes
+      },
+      trace: false,
+    };
+
+    // call store method to offer credential
+    await issuerStore.offerCredential(payload);
+    toast.info('Credential Offer Sent');
+  } catch (error) {
+    toast.error(`Failure: ${error}`);
+  }
+}
+
+//creation invitation aries-rfcs 0160 Connection Protocol
 const submitForm = async () => {
+const baseUrl =  config.value.frontend.sisProxyPath;
+const socket = io(`${baseUrl}`, {
+  // withCredentials: true,
+  transports: ['websocket'] // Ensuring to use WebSockets
+});
+
+socket.on("connect", () => {
+  console.log("Connected to the websocket server.");
+});
+
+socket.on("connect_error", (err) => {
+  console.error("Connection Error:", err);
+});
+
+
   studentFullName.value = '';
   try {
-    const result : any = await createInvitation(`${fullName.value} - ${studentId.value}`, false); // Assume single use invitation
+    const result : any = await createInvitation(`${fullName.value} - ${studentId.value}`, false);
     if (result && result.invitation_url ) {
       invitation_url.value = result.invitation_url;
       console.log(`Invitation URL: ${result.invitation_url}`);
       showModal.value = true;
+      websocketService.sendMessage({ event: 'invitationCreated', data: result });
     }
+
+  socket.on("eventUpdate", async (data) => {
+  console.log("Event received:", data);
+  if (data.details.state === "active") { 
+    showModal.value = false; 
+    console.log(`Student ${data.details.alias} successfully added!`);
+    console.log('Issuing student ID....')
+    try {
+      const attributes = [
+            { name: "Last", value: `${response.studentName.lastName}` },
+            { name: "School", value: 'Cape Fear Community College' },
+            { name: "Expiration", value: '20250101' },
+            { name: "First", value: `${response.studentName.firstName}`},
+            { name: "StudentID", value: `${studentId.value}`},
+            { name: "Middle", value: `${response.studentName.middleName}` },
+          ];
+
+      console.log("attributes",attributes)
+    const payload = {
+      auto_issue: true,
+      auto_remove: false,
+      connection_id: `${data.details.connection_id}`,
+      cred_def_id: 'N3qds31u5nDEM1jpGD4PMX:3:CL:100:Student-ID-Cape-Fear',
+      credential_preview: {
+              '@type': 'issue-credential/1.0/credential-preview',
+              attributes: JSON.parse(JSON.stringify(attributes))
+            },
+      trace: false,
+    };
+
+    // call store
+    await issuerStore.offerCredential(payload);
+    toast.info('Credential Offer Sent');
+  } catch (error) {
+    toast.error(`Failure: ${error}`);
+  }
+
+
+  }
+
+
+  if (data.details.state === 'credential_acked'){
+    console.log("Student Recieved and Accepted the Student ID credential!")
+  }
+});
+
+  onUnmounted(() => {
+  socket.disconnect();
+});
+
   } catch (err: any) {
     console.error('Error during invitation creation:', err.message);
   }
+
+
+
 };
 
 
@@ -111,13 +227,15 @@ const clearForm = () => {
 }
 
 const handleIdLookUp = async () => {
+  error.value = false;
+  fullName.value = ''
+  studentFullName.value = ''
   loading.value = true;
-
   try {
-    const result = await idLookup(studentId.value);
-    if (result && result.studentName) {
-      fullName.value = result.studentName.fullName; 
-      studentFullName.value = result.studentName.fullName;
+    response = await idLookup(studentId.value);
+    if (response && response.studentName) {
+      fullName.value = response.studentName.fullName; 
+      studentFullName.value = response.studentName.fullName;
       loading.value = false;
 
     } else {

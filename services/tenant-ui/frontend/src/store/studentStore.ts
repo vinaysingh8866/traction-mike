@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia';
 import { API_PATH } from '@/helpers/constants';
-import { useEllucianApi } from './ellucianApi';
+import { useSisApi } from './sisApi';
 
 export const useStudentStore = defineStore('student', () => {
 
-  const ellucianApi = useEllucianApi();
+  const sisApi = useSisApi();
 
 
     async function idLookup(studentNumber: string) {
@@ -12,7 +12,7 @@ export const useStudentStore = defineStore('student', () => {
       let studentData = null;
   
       try {
-        const response = await ellucianApi.getHttp(
+        const response = await sisApi.getHttp(
           `${API_PATH.ELLUCIAN_STUDENT_NAME}?studentNumber=${studentNumber}`
         );
         studentData = response.data;
