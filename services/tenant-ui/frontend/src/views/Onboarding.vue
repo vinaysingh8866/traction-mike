@@ -40,14 +40,14 @@
                 :label="$t('onboarding.clear')"
                 icon="pi pi-times"
                 class="button-clear"
-                :disabled="!studentId && !fullName"
+                :disabled="!studentId && !fullName "
                 @click="clearForm"
               />
               <Button
                 :label="$t('onboarding.submit')"
                 icon="pi pi-check"
                 class="button-submit"
-                :disabled="!studentId || !fullName"
+                :disabled="!studentId || !fullName || !errMessage || !studentFullName"
                 type="submit"
               />
             </div>
