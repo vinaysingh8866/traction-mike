@@ -17,7 +17,7 @@ acapy:
     repository: ghcr.io/bcgov/traction-plugins-acapy
     pullPolicy: IfNotPresent
     pullSecrets: []
-    tag: ""
+    tag: "sha-c90ed7d@sha256:2711ec54e4990fd7d094196e392938dd31c8134ff562d36d121b5c1216f53b30"
 
   ## ServiceAccount configuration
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
