@@ -130,8 +130,12 @@ export const API_PATH = {
   SCHEMA_STORAGE_SYNC: '/schema-storage/sync-created',
   SCHEMA_STORAGE_ITEM: (id: string) => `/schema-storage/${id}`,
 
-  ELLUCIAN_STUDENT_INFO: '/topic/ellucian/student-info',
-  ELLUCIAN_STUDENT_NAME: '/topic/ellucian/student-name',
+  // TO REPLACE by /sis/student-info and /sis/student-name
+  // ELLUCIAN_STUDENT_INFO: '/topic/ellucian/student-info',
+  // ELLUCIAN_STUDENT_NAME: '/topic/ellucian/student-name',
+
+  SIS_STUDENT_TRANSCRIPT: '/sis/student-transcript',
+  SIS_STUDENT_ID: '/sis/student-id',
 
   TENANT_SELF: '/tenant',
   TENANT_ENDORSER_CONNECTION: '/tenant/endorser-connection',

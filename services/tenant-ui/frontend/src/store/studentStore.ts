@@ -13,7 +13,7 @@ export const useStudentStore = defineStore('student', () => {
   
       try {
         const response = await sisApi.getHttp(
-          `${API_PATH.ELLUCIAN_STUDENT_NAME}?studentNumber=${studentNumber}`
+          `${API_PATH.SIS_STUDENT_ID}?studentNumber=${studentNumber}`
         );
         studentData = response.data;
       } catch (err) {
