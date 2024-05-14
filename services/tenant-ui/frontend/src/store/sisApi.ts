@@ -49,23 +49,6 @@ export default {
   useSisApi,
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // import { defineStore, storeToRefs } from 'pinia';
 // import axios from 'axios';
 // import { useConfigStore } from './configStore';
@@ -84,7 +67,6 @@ export default {
 //   const ellucianApi = createAxios({
 //     baseURL: config.value.frontend.sisProxyPath,
 //   });
-
 
 // async function callEllucianApi(
 //     url: string,

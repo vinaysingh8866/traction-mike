@@ -7,15 +7,15 @@
     "clear": "Clear",
     "idLookup": "ID Look Up",
     "fetching": "Fetching Student Name from Ellucian SIS",
-    "notFound":"Student Name not Found in Ellucian SIS",
-    "found":"Successfully fetched the Student Name. Please check the Full Name again before submit",
-    "loadingQRCode":"Loading QR Code...",
-    "scanQRCODE":"Scan the QR Code",
-    "qrScanned":"Scanned the QR code, Adding the connection now...",
-    "contactAdded":"Successfully established the connection! ",
-    "issuingStudentID":"Issuing StudentID in progress... ",
-    "credentialOffered":"Credential offer sent, student need to accept the ID on their wallet",
-    "return":"Return to onboarding of next student"
+    "notFound": "Student Name not Found in Ellucian SIS",
+    "found": "Successfully fetched the Student Name. Please check the Full Name again before submit",
+    "loadingQRCode": "Loading QR Code...",
+    "scanQRCODE": "Scan the QR Code",
+    "qrScanned": "Scanned the QR code, Adding the connection now...",
+    "contactAdded": "Successfully established the connection! ",
+    "issuingStudentID": "Issuing StudentID in progress... ",
+    "credentialOffered": "Credential offer sent, student need to accept the ID on their wallet",
+    "return": "Return to onboarding of next student"
   },
   "transcript": {
     "transcript": "Transcript",
@@ -27,7 +27,15 @@
     "id": "ID:",
     "attributes": "Attributes:",
     "noAttributes": "No Attributes",
-    "attributeKeyValue": "{key}: {value}"
+    "attributeKeyValue": "{key}: {value}",
+    "cumulativeTranscript": "Cumulative Transcript",
+    "cumulativeAttemptedCredits": "Cumulative Attempted Credits:",
+    "cumulativeEarnedCredits": "Cumulative Earned Credits:",
+    "cumulativeGradePointAverage": "Cumulative Grade Point Average:",
+    "courseTranscript": "Course Transcript",
+    "courseDetails": "{title} ({code}): {grade}",
+    "fetching": "Fetching...",
+    "notFound": "Student not found"
   },
   "about": {
     "about": "About",

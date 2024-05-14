@@ -12,35 +12,68 @@
                   :label="$t('transcript.findTranscript')"
                   icon="pi pi-search"
                   class="search-transcript"
+                  :disabled="!schema || loading"
                   @click="findTranscript"
                 />
               </div>
-            </div>
-            <!-- Only display this section if fetchedSchema has been set -->
-            <div v-if="fetchedSchema">
-              <div
-                v-if="
-                  fetchedSchema.schema &&
-                  fetchedSchema.schema.attrNames &&
-                  fetchedSchema.schema.attrNames.length > 0
-                "
-              >
+              <div v-if="loading" class="center-content">
+                <i class="pi pi-spin pi-spinner" style="font-size: 2em"></i>
+                <p>{{ $t('transcript.fetching') }}</p>
+              </div>
+              <div v-else-if="error" class="center-content">
+                <p class="text-error">{{ errMessage }}</p>
+              </div>
+              <div v-if="fetchedSchema" class="center-content">
                 <h3>{{ $t('transcript.details') }}</h3>
-                <div>
-                  <strong>{{ $t('transcript.attributes') }}</strong>
+                <div v-if="fetchedSchema.studentCumulativeTranscript">
+                  <strong>{{ $t('transcript.cumulativeTranscript') }}</strong>
                   <ul>
-                    <li
-                      v-for="attrName in fetchedSchema.schema.attrNames"
-                      :key="attrName"
-                    >
-                      {{ attrName }}
+                    <li>
+                      {{ $t('transcript.cumulativeAttemptedCredits') }}
+                      {{
+                        fetchedSchema.studentCumulativeTranscript[0]
+                          ?.cumulativeAttemptedCredits
+                      }}
+                    </li>
+                    <li>
+                      {{ $t('transcript.cumulativeEarnedCredits') }}
+                      {{
+                        fetchedSchema.studentCumulativeTranscript[0]
+                          ?.cumulativeEarnedCredits
+                      }}
+                    </li>
+                    <li>
+                      {{ $t('transcript.cumulativeGradePointAverage') }}
+                      {{
+                        fetchedSchema.studentCumulativeTranscript[0]
+                          ?.cumulativeGradePointAverage
+                      }}
                     </li>
                   </ul>
                 </div>
-              </div>
-              <div v-else>
-                <strong>{{ $t('transcript.attributes') }}</strong>
-                {{ $t('transcript.noAttributes') }}
+
+                <div
+                  v-if="
+                    fetchedSchema.courseTranscript &&
+                    fetchedSchema.courseTranscript.length > 0
+                  "
+                >
+                  <strong>{{ $t('transcript.courseTranscript') }}</strong>
+                  <ul>
+                    <li
+                      v-for="course in fetchedSchema.courseTranscript"
+                      :key="course.courseCode"
+                    >
+                      {{
+                        $t('transcript.courseDetails', {
+                          title: course.courseTitle,
+                          code: course.courseCode,
+                          grade: course.finalLetterGradeEarned,
+                        })
+                      }}
+                    </li>
+                  </ul>
+                </div>
               </div>
             </div>
 
@@ -74,31 +107,39 @@ import AccordionTab from 'primevue/accordiontab';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import MainCardContent from '@/components/layout/mainCard/MainCardContent.vue';
-import { SchemaStorageRecord, Schema } from '@/types/acapyApi/acapyInterface';
+import { useStudentStore, useConnectionStore } from '@/store';
 
-import {
-  Schema as BaseSchema,
-  SchemaStorageRecord as BaseSchemaStorageRecord,
-} from '@/types/acapyApi/acapyInterface';
-
-interface MySchema {
-  schema_id: string;
-}
-
-// Extend the original Schema to include detailed property types
-interface ExtendedSchema extends BaseSchema {
+interface ExtendedSchema {
   attrNames?: string[];
 }
 
-// Extend the SchemaStorageRecord to use ExtendedSchema
-interface ExtendedSchemaStorageRecord extends BaseSchemaStorageRecord {
+interface ExtendedSchemaStorageRecord {
   schema?: ExtendedSchema;
+  studentCumulativeTranscript?: {
+    cumulativeAttemptedCredits: number;
+    cumulativeEarnedCredits: number;
+    cumulativeGradePointAverage: number;
+  }[];
+  courseTranscript?: {
+    schoolYear: number;
+    term: string;
+    courseTitle: string;
+    courseCode: string;
+    academicPeriod: number;
+    earnedCredits: number;
+    finalNumericGradeEarned: number;
+    finalLetterGradeEarned: string;
+  }[];
 }
 
 const { t } = useI18n();
 const schema = ref('');
 const fetchedSchema: Ref<ExtendedSchemaStorageRecord | null> = ref(null);
-const { getStoredSchemas } = useGovernanceStore();
+//const { getStoredSchemas } = useGovernanceStore();
+const { getStudentInfo } = useStudentStore();
+const loading = ref(false);
+const error = ref(false);
+let errMessage = '';
 
 function submitForm() {
   console.log('Submitting:', {
@@ -111,18 +152,28 @@ function clearForm() {
   fetchedSchema.value = null; // Reset the fetchedSchema to clear displayed details
 }
 
-async function findTranscript() {
+const findTranscript = async () => {
+  loading.value = true;
+  error.value = false;
+
   try {
-    const schemas: MySchema[] = await getStoredSchemas();
-    const foundSchema = schemas?.find(
-      (s: MySchema) => s.schema_id === schema.value
-    );
-    fetchedSchema.value = foundSchema || null;
-  } catch (error) {
-    console.error('Error fetching schema:', error);
-    fetchedSchema.value = null;
+    const studentInfo = await getStudentInfo(schema.value);
+    console.log(schema.value);
+    console.log(studentInfo);
+    if (studentInfo) {
+      fetchedSchema.value = studentInfo;
+    } else {
+      throw new Error(t('transcript.notFound'));
+    }
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    console.error('Error fetching student info:', errorMessage);
+    errMessage = errorMessage;
+    error.value = true;
+  } finally {
+    loading.value = false;
   }
-}
+};
 </script>
 
 <style scoped>

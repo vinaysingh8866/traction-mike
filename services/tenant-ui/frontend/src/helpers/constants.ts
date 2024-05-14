@@ -36,7 +36,6 @@ export const API_PATH = {
   CREDENTIAL_REVOKED: (id: string) => `/credential/revoked/${id}`,
   CREDENTIAL_W3C: (id: string) => `/credential/w3c/${id}`,
   CREDENTIAL: (id: string) => `/credential/${id}`,
-  
 
   CREDENTIAL_DEFINITIONS: '/credential-definitions',
   CREDENTIAL_DEFINITION: (id: string) => `/credential-definitions/${id}`,

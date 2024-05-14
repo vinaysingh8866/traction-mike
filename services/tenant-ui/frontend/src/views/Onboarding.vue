@@ -3,7 +3,7 @@
     <MainCardContent :title="$t('onboarding.onboarding')">
       <Accordion :multiple="true">
         <AccordionTab header="Onboarding Form">
-          <form @submit.prevent="submitForm" class="onboarding-form">
+          <form class="onboarding-form" @submit.prevent="submitForm">
             <div class="form-group student-id-group">
               <label for="studentId">{{ $t('onboarding.studentId') }}</label>
               <div class="input-and-button">
@@ -12,12 +12,12 @@
                   :label="$t('onboarding.idLookup')"
                   icon="pi pi-search"
                   class="button-id-lookup"
-                  @click="handleIdLookUp"
                   :disabled="!studentId || loading"
+                  @click="handleIdLookUp"
                 />
               </div>
               <div v-if="loading" class="center-content">
-                <i class="pi pi-spin pi-spinner" style="font-size: 2em;"></i>
+                <i class="pi pi-spin pi-spinner" style="font-size: 2em"></i>
                 <p>{{ $t('onboarding.fetching') }}</p>
               </div>
               <div v-else-if="error" class="center-content">
@@ -27,7 +27,7 @@
                 <p class="text-success">{{ $t('onboarding.found') }}</p>
               </div>
               <div v-else-if="loadingQRCode" class="center-content">
-                <i class="pi pi-spin pi-spinner" style="font-size: 2em;"></i>
+                <i class="pi pi-spin pi-spinner" style="font-size: 2em"></i>
                 <p>{{ $t('onboarding.loadingQRCode') }}</p>
               </div>
             </div>
@@ -53,36 +53,55 @@
             </div>
           </form>
 
-          <Dialog v-model:visible="showModal" :modal="true" :style="{ width: '50vw' }" header="" @hide="clearForm">
-            <div class="qr-code-display" v-if="!qrCodeScanned && !contactAdded && !credentialIssued">
+          <Dialog
+            v-model:visible="showModal"
+            :modal="true"
+            :style="{ width: '50vw' }"
+            header=""
+            @hide="clearForm"
+          >
+            <div
+              v-if="!qrCodeScanned && !contactAdded && !credentialIssued"
+              class="qr-code-display"
+            >
               <p>{{ $t('onboarding.scanQRCODE') }}</p>
-              <QRCode :qr-content="invitation_url"/>
+              <QRCode :qr-content="invitation_url" />
             </div>
-            <div class="left-aligned-content" v-else-if="qrCodeScanned && !contactAdded">
-              <i class="pi pi-spin pi-spinner" style="font-size: 1em;"></i>
+            <div
+              v-else-if="qrCodeScanned && !contactAdded"
+              class="left-aligned-content"
+            >
+              <i class="pi pi-spin pi-spinner" style="font-size: 1em"></i>
               <p>{{ $t('onboarding.qrScanned') }}</p>
             </div>
-            <div class="left-aligned-content" v-else-if="contactAdded">
+            <div v-else-if="contactAdded" class="left-aligned-content">
               <div class="status">
-                <i class="pi pi-check" style="font-size: 1em; color: green;"></i>
-                <span style="font-size: 1em; color: green; margin-left: 0.5em;">{{ $t('onboarding.contactAdded') }}</span>
+                <i class="pi pi-check" style="font-size: 1em; color: green"></i>
+                <span
+                  style="font-size: 1em; color: green; margin-left: 0.5em"
+                  >{{ $t('onboarding.contactAdded') }}</span
+                >
               </div>
               <div v-if="credentialIssued" class="status">
-                <i class="pi pi-check" style="font-size: 1em; color: green;"></i>
-                <span style="font-size: 1em; color: green; margin-left: 0.5em;">{{ $t('onboarding.credentialOffered') }}</span>
-                <div class = "button-container">
+                <i class="pi pi-check" style="font-size: 1em; color: green"></i>
+                <span
+                  style="font-size: 1em; color: green; margin-left: 0.5em"
+                  >{{ $t('onboarding.credentialOffered') }}</span
+                >
+                <div class="button-container">
                   <Button
-                  :label="$t('onboarding.return')"
-                  icon="pi pi-refresh"
-                  class="button-return"
-                  @click="clearForm"
-                />
+                    :label="$t('onboarding.return')"
+                    icon="pi pi-refresh"
+                    class="button-return"
+                    @click="clearForm"
+                  />
                 </div>
-                
               </div>
               <div v-else class="status">
-                <i class="pi pi-spin pi-spinner" style="font-size: 1.5em;"></i>
-                <p style="font-size: 1.5em;">{{ $t('onboarding.issuingStudentID') }}</p>
+                <i class="pi pi-spin pi-spinner" style="font-size: 1.5em"></i>
+                <p style="font-size: 1.5em">
+                  {{ $t('onboarding.issuingStudentID') }}
+                </p>
               </div>
             </div>
           </Dialog>
@@ -94,16 +113,21 @@
 
 <script setup lang="ts">
 import { ref, onUnmounted } from 'vue';
-import { io } from "socket.io-client";
+import { io } from 'socket.io-client';
 import { useI18n } from 'vue-i18n';
 import Accordion from 'primevue/accordion';
 import AccordionTab from 'primevue/accordiontab';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import MainCardContent from '@/components/layout/mainCard/MainCardContent.vue';
-import QRCode from '@/components/common/QRCode.vue'; 
+import QRCode from '@/components/common/QRCode.vue';
 import Dialog from 'primevue/dialog';
-import { useStudentStore, useConnectionStore, useIssuerStore, useConfigStore } from '@/store';
+import {
+  useStudentStore,
+  useConnectionStore,
+  useIssuerStore,
+  useConfigStore,
+} from '@/store';
 import { useToast } from 'vue-toastification';
 import { defineStore, storeToRefs } from 'pinia';
 
@@ -112,91 +136,100 @@ const studentId = ref('');
 const fullName = ref('');
 const loading = ref(false);
 const error = ref(false);
-let errMessage: string = "";
+let errMessage: string = '';
 const invitation_url = ref('');
 const showModal = ref(false);
 const studentFullName = ref('');
 const loadingQRCode = ref(false);
-let response:any = null;
+let response: any = null;
 const { createInvitation } = useConnectionStore();
 const { idLookup } = useStudentStore();
 const issuerStore = useIssuerStore();
 const toast = useToast();
 const { config } = storeToRefs(useConfigStore());
-let qrCodeScanned = ref(false);
-let contactAdded = ref(false);
-let credentialIssued = ref(false);
-let credentialOffered = ref(false); 
-
+const qrCodeScanned = ref(false);
+const contactAdded = ref(false);
+const credentialIssued = ref(false);
+const credentialOffered = ref(false);
 
 // creation invitation aries-rfcs 0160 Connection Protocol
 const submitForm = async () => {
   const baseUrl = config.value.frontend.sisProxyPath;
   const socket = io(`${baseUrl}`, {
-    transports: ['websocket']
+    transports: ['websocket'],
   });
 
-  socket.on("connect", () => {
-    console.log("Connected to the websocket server.");
+  socket.on('connect', () => {
+    console.log('Connected to the websocket server.');
   });
 
-  socket.on("connect_error", (err) => {
-    console.error("Connection Error:", err);
+  socket.on('connect_error', (err: any) => {
+    console.error('Connection Error:', err);
   });
 
   studentFullName.value = '';
   try {
-    const result : any = await createInvitation(`${fullName.value} -studentID- ${studentId.value}`, false);
+    const result: any = await createInvitation(
+      `${fullName.value} -studentID- ${studentId.value}`,
+      false
+    );
     if (result && result.invitation_url) {
       invitation_url.value = result.invitation_url;
       console.log(`Invitation URL: ${result.invitation_url}`);
       showModal.value = true;
     }
 
-    socket.on("eventUpdate", async (data) => {
-      console.log("Event received:", data);
+    socket.on(
+      'eventUpdate',
+      async (data: {
+        details: { state: string; alias: any; connection_id: any };
+        cred_def_id: any;
+        attributes: any;
+      }) => {
+        console.log('Event received:', data);
 
-      if (data.details?.state === "request") { 
-        qrCodeScanned.value = true;
-      }
+        if (data.details?.state === 'request') {
+          qrCodeScanned.value = true;
+        }
 
-      if (data.details?.state === "active" && !credentialOffered.value) { 
-        qrCodeScanned.value = false;
-        contactAdded.value = true;
-        credentialOffered.value = true;
-        console.log(`Student ${data.details.alias} successfully added!`);
-        console.log('Issuing student ID....');
-        try {
-          const payload = {
-            auto_issue: true,
-            auto_remove: false,
-            connection_id: `${data.details.connection_id}`,
-            cred_def_id: `${data.cred_def_id}`,
-            credential_preview: {
-              '@type': 'issue-credential/1.0/credential-preview',
-              attributes: JSON.parse(JSON.stringify(data.attributes))
-            },
-            trace: false,
-          };
-          await issuerStore.offerCredential(payload);
-          toast.info('Credential Offer Sent');
-        } catch (error) {
-          toast.error(`Failure: ${error}`);
+        if (data.details?.state === 'active' && !credentialOffered.value) {
+          qrCodeScanned.value = false;
+          contactAdded.value = true;
+          credentialOffered.value = true;
+          console.log(`Student ${data.details.alias} successfully added!`);
+          console.log('Issuing student ID....');
+          try {
+            const payload = {
+              auto_issue: true,
+              auto_remove: false,
+              connection_id: `${data.details.connection_id}`,
+              cred_def_id: `${data.cred_def_id}`,
+              credential_preview: {
+                '@type': 'issue-credential/1.0/credential-preview',
+                attributes: JSON.parse(JSON.stringify(data.attributes)),
+              },
+              trace: false,
+            };
+            await issuerStore.offerCredential(payload);
+            toast.info('Credential Offer Sent');
+          } catch (error) {
+            toast.error(`Failure: ${error}`);
+          }
+        }
+
+        if (data.details?.state === 'offer_sent') {
+          contactAdded.value = true;
+          credentialIssued.value = true;
+          console.log(
+            'Student Received and Accepted the Student ID credential!'
+          );
         }
       }
-
-      if (data.details?.state === 'offer_sent') {
-        contactAdded.value = true;
-        credentialIssued.value = true;
-        console.log("Student Received and Accepted the Student ID credential!");
-      }
-     
-    });
+    );
 
     onUnmounted(() => {
       socket.disconnect();
     });
-
   } catch (err: any) {
     console.error('Error during invitation creation:', err.message);
   }
@@ -207,24 +240,26 @@ const clearForm = () => {
   fullName.value = '';
   error.value = false;
   showModal.value = false;
-  invitation_url.value = "";
+  invitation_url.value = '';
   studentFullName.value = '';
   qrCodeScanned.value = false;
   contactAdded.value = false;
   credentialIssued.value = false;
   credentialOffered.value = false;
-}
+};
 
 const handleIdLookUp = async () => {
   error.value = false;
+  fullName.value = '';
+  studentFullName.value = '';
   fullName.value = '';
   studentFullName.value = '';
   loading.value = true;
   try {
     response = await idLookup(studentId.value);
     if (response && response.studentIdCred) {
-      console.log("response", response);
-      fullName.value = response.studentIdCred.fullName; 
+      console.log('response', response);
+      fullName.value = response.studentIdCred.fullName;
       studentFullName.value = response.studentIdCred.fullName;
       loading.value = false;
     } else {
@@ -236,7 +271,7 @@ const handleIdLookUp = async () => {
     loading.value = false;
     error.value = true;
     errMessage = err.message;
-  } 
+  }
 };
 </script>
 
@@ -293,26 +328,26 @@ label {
 .center-content {
   text-align: center;
   margin-top: 20px;
-  padding: 10px; 
+  padding: 10px;
   border-radius: 5px;
 }
 
 .pi-spinner {
   font-size: 2em;
-  color: #007bff; 
+  color: #007bff;
   margin-bottom: 10px;
 }
 
 .text-error {
-  color: #dc3545; 
-  background-color: #f8d7da; 
+  color: #dc3545;
+  background-color: #f8d7da;
   padding: 10px;
   border: 1px solid #f5c6cb;
   border-radius: 5px;
 }
 
 .text-success {
-  color: #28a745; 
+  color: #28a745;
   background-color: #d4edda;
   padding: 10px;
   border: 1px solid #c3e6cb;
@@ -366,4 +401,3 @@ p {
   }
 }
 </style>
- 
