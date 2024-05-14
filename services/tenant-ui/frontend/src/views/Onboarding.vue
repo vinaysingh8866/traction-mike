@@ -1,11 +1,9 @@
-
 <template>
   <div class="onboarding-container">
     <MainCardContent :title="$t('onboarding.onboarding')">
       <Accordion :multiple="true">
         <AccordionTab header="Onboarding Form">
           <form @submit.prevent="submitForm" class="onboarding-form">
-
             <div class="form-group student-id-group">
               <label for="studentId">{{ $t('onboarding.studentId') }}</label>
               <div class="input-and-button">
@@ -55,10 +53,39 @@
             </div>
           </form>
 
-          <Dialog v-model:visible="showModal" :modal="true" :style="{ width: '50vw' }" header="QR Code">
-            <QRCode :qr-content="invitation_url"/>
+          <Dialog v-model:visible="showModal" :modal="true" :style="{ width: '50vw' }" header="" @hide="clearForm">
+            <div class="qr-code-display" v-if="!qrCodeScanned && !contactAdded && !credentialIssued">
+              <p>{{ $t('onboarding.scanQRCODE') }}</p>
+              <QRCode :qr-content="invitation_url"/>
+            </div>
+            <div class="left-aligned-content" v-else-if="qrCodeScanned && !contactAdded">
+              <i class="pi pi-spin pi-spinner" style="font-size: 1em;"></i>
+              <p>{{ $t('onboarding.qrScanned') }}</p>
+            </div>
+            <div class="left-aligned-content" v-else-if="contactAdded">
+              <div class="status">
+                <i class="pi pi-check" style="font-size: 1em; color: green;"></i>
+                <span style="font-size: 1em; color: green; margin-left: 0.5em;">{{ $t('onboarding.contactAdded') }}</span>
+              </div>
+              <div v-if="credentialIssued" class="status">
+                <i class="pi pi-check" style="font-size: 1em; color: green;"></i>
+                <span style="font-size: 1em; color: green; margin-left: 0.5em;">{{ $t('onboarding.credentialOffered') }}</span>
+                <div class = "button-container">
+                  <Button
+                  :label="$t('onboarding.return')"
+                  icon="pi pi-refresh"
+                  class="button-return"
+                  @click="clearForm"
+                />
+                </div>
+                
+              </div>
+              <div v-else class="status">
+                <i class="pi pi-spin pi-spinner" style="font-size: 1.5em;"></i>
+                <p style="font-size: 1.5em;">{{ $t('onboarding.issuingStudentID') }}</p>
+              </div>
+            </div>
           </Dialog>
-
         </AccordionTab>
       </Accordion>
     </MainCardContent>
@@ -66,7 +93,6 @@
 </template>
 
 <script setup lang="ts">
-
 import { ref, onUnmounted } from 'vue';
 import { io } from "socket.io-client";
 import { useI18n } from 'vue-i18n';
@@ -80,7 +106,6 @@ import Dialog from 'primevue/dialog';
 import { useStudentStore, useConnectionStore, useIssuerStore, useConfigStore } from '@/store';
 import { useToast } from 'vue-toastification';
 import { defineStore, storeToRefs } from 'pinia';
-import websocketService from '@/services/websocketService';
 
 const { t } = useI18n();
 const studentId = ref('');
@@ -98,124 +123,84 @@ const { idLookup } = useStudentStore();
 const issuerStore = useIssuerStore();
 const toast = useToast();
 const { config } = storeToRefs(useConfigStore());
+let qrCodeScanned = ref(false);
+let contactAdded = ref(false);
+let credentialIssued = ref(false);
+let credentialOffered = ref(false); 
 
 
-async function issueCredential(details : any) {
-  console.log('Issuing student ID...');
-  try {
-    const attributes = [
-      { name: "Last", value: `${details.studentName.lastName}` },
-      { name: "School", value: 'Cape Fear Community College' },
-      { name: "Expiration", value: '20250101' },
-      { name: "First", value: `${details.studentName.firstName}` },
-      { name: "StudentID", value: `${studentId.value}` },
-      { name: "Middle", value: `${details.studentName.middleName}` },
-    ];
-
-    const payload = {
-      auto_issue: true,
-      auto_remove: false,
-      connection_id: `${details.connection_id}`,
-      cred_def_id: 'N3qds31u5nDEM1jpGD4PMX:3:CL:100:Student-ID-Cape-Fear',
-      credential_preview: {
-        '@type': 'issue-credential/1.0/credential-preview',
-        attributes: attributes
-      },
-      trace: false,
-    };
-
-    // call store method to offer credential
-    await issuerStore.offerCredential(payload);
-    toast.info('Credential Offer Sent');
-  } catch (error) {
-    toast.error(`Failure: ${error}`);
-  }
-}
-
-//creation invitation aries-rfcs 0160 Connection Protocol
+// creation invitation aries-rfcs 0160 Connection Protocol
 const submitForm = async () => {
-const baseUrl =  config.value.frontend.sisProxyPath;
-const socket = io(`${baseUrl}`, {
-  // withCredentials: true,
-  transports: ['websocket'] // Ensuring to use WebSockets
-});
+  const baseUrl = config.value.frontend.sisProxyPath;
+  const socket = io(`${baseUrl}`, {
+    transports: ['websocket']
+  });
 
-socket.on("connect", () => {
-  console.log("Connected to the websocket server.");
-});
+  socket.on("connect", () => {
+    console.log("Connected to the websocket server.");
+  });
 
-socket.on("connect_error", (err) => {
-  console.error("Connection Error:", err);
-});
-
+  socket.on("connect_error", (err) => {
+    console.error("Connection Error:", err);
+  });
 
   studentFullName.value = '';
   try {
-    const result : any = await createInvitation(`${fullName.value} - ${studentId.value}`, false);
-    if (result && result.invitation_url ) {
+    const result : any = await createInvitation(`${fullName.value} -studentID- ${studentId.value}`, false);
+    if (result && result.invitation_url) {
       invitation_url.value = result.invitation_url;
       console.log(`Invitation URL: ${result.invitation_url}`);
       showModal.value = true;
-      websocketService.sendMessage({ event: 'invitationCreated', data: result });
     }
 
-  socket.on("eventUpdate", async (data) => {
-  console.log("Event received:", data);
-  if (data.details.state === "active") { 
-    showModal.value = false; 
-    console.log(`Student ${data.details.alias} successfully added!`);
-    console.log('Issuing student ID....')
-    try {
-      const attributes = [
-            { name: "Last", value: `${response.studentName.lastName}` },
-            { name: "School", value: 'Cape Fear Community College' },
-            { name: "Expiration", value: '20250101' },
-            { name: "First", value: `${response.studentName.firstName}`},
-            { name: "StudentID", value: `${studentId.value}`},
-            { name: "Middle", value: `${response.studentName.middleName}` },
-          ];
+    socket.on("eventUpdate", async (data) => {
+      console.log("Event received:", data);
 
-      console.log("attributes",attributes)
-    const payload = {
-      auto_issue: true,
-      auto_remove: false,
-      connection_id: `${data.details.connection_id}`,
-      cred_def_id: 'N3qds31u5nDEM1jpGD4PMX:3:CL:100:Student-ID-Cape-Fear',
-      credential_preview: {
+      if (data.details?.state === "request") { 
+        qrCodeScanned.value = true;
+      }
+
+      if (data.details?.state === "active" && !credentialOffered.value) { 
+        qrCodeScanned.value = false;
+        contactAdded.value = true;
+        credentialOffered.value = true;
+        console.log(`Student ${data.details.alias} successfully added!`);
+        console.log('Issuing student ID....');
+        try {
+          const payload = {
+            auto_issue: true,
+            auto_remove: false,
+            connection_id: `${data.details.connection_id}`,
+            cred_def_id: `${data.cred_def_id}`,
+            credential_preview: {
               '@type': 'issue-credential/1.0/credential-preview',
-              attributes: JSON.parse(JSON.stringify(attributes))
+              attributes: JSON.parse(JSON.stringify(data.attributes))
             },
-      trace: false,
-    };
+            trace: false,
+          };
+          await issuerStore.offerCredential(payload);
+          toast.info('Credential Offer Sent');
+        } catch (error) {
+          toast.error(`Failure: ${error}`);
+        }
+      }
 
-    // call store
-    await issuerStore.offerCredential(payload);
-    toast.info('Credential Offer Sent');
-  } catch (error) {
-    toast.error(`Failure: ${error}`);
-  }
+      if (data.details?.state === 'offer_sent') {
+        contactAdded.value = true;
+        credentialIssued.value = true;
+        console.log("Student Received and Accepted the Student ID credential!");
+      }
+     
+    });
 
-
-  }
-
-
-  if (data.details.state === 'credential_acked'){
-    console.log("Student Recieved and Accepted the Student ID credential!")
-  }
-});
-
-  onUnmounted(() => {
-  socket.disconnect();
-});
+    onUnmounted(() => {
+      socket.disconnect();
+    });
 
   } catch (err: any) {
     console.error('Error during invitation creation:', err.message);
   }
-
-
-
 };
-
 
 const clearForm = () => {
   studentId.value = '';
@@ -224,20 +209,24 @@ const clearForm = () => {
   showModal.value = false;
   invitation_url.value = "";
   studentFullName.value = '';
+  qrCodeScanned.value = false;
+  contactAdded.value = false;
+  credentialIssued.value = false;
+  credentialOffered.value = false;
 }
 
 const handleIdLookUp = async () => {
   error.value = false;
-  fullName.value = ''
-  studentFullName.value = ''
+  fullName.value = '';
+  studentFullName.value = '';
   loading.value = true;
   try {
     response = await idLookup(studentId.value);
-    if (response && response.studentName) {
-      fullName.value = response.studentName.fullName; 
-      studentFullName.value = response.studentName.fullName;
+    if (response && response.studentIdCred) {
+      console.log("response", response);
+      fullName.value = response.studentIdCred.fullName; 
+      studentFullName.value = response.studentIdCred.fullName;
       loading.value = false;
-
     } else {
       errMessage = t('onboarding.notFound');
       throw new Error(t('onboarding.notFound'));
@@ -247,10 +236,8 @@ const handleIdLookUp = async () => {
     loading.value = false;
     error.value = true;
     errMessage = err.message;
- 
   } 
 };
-
 </script>
 
 <style scoped>
@@ -316,7 +303,6 @@ label {
   margin-bottom: 10px;
 }
 
-
 .text-error {
   color: #dc3545; 
   background-color: #f8d7da; 
@@ -336,6 +322,20 @@ label {
 p {
   margin: 0;
   font-weight: bold;
+}
+
+.qr-code-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.button-container {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  margin-top: 1em;
 }
 
 @media (max-width: 768px) {
@@ -361,9 +361,9 @@ p {
     align-items: stretch;
   }
   .qr-code-display {
-  margin-top: 20px;
-  text-align: center;
-}
-
+    margin-top: 20px;
+    text-align: center;
+  }
 }
 </style>
+ 
