@@ -1,6 +1,7 @@
 export { useConfigStore } from './configStore';
 // Tenant
 export { useConnectionStore } from './connectionStore';
+export { useStudentStore } from './studentStore';
 export { useGovernanceStore } from './governanceStore';
 export { useHolderStore } from './holderStore';
 export { useIssuerStore } from './issuerStore';

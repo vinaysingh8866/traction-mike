@@ -30,12 +30,13 @@ export const API_PATH = {
   CONNECTIONS_ENDPOINTS: (id: string) => `/connections/${id}/endpoints`,
   CONNECTIONS_METADATA: (id: string) => `/connections/${id}/metadata`,
 
+  CREDENTIALS: '/credentials',
+  CREDENTIALS_W3C: '/credentials/w3c',
   CREDENTIAL_MIME_TYPES: (id: string) => `/credential/mime-types/${id}`,
   CREDENTIAL_REVOKED: (id: string) => `/credential/revoked/${id}`,
   CREDENTIAL_W3C: (id: string) => `/credential/w3c/${id}`,
   CREDENTIAL: (id: string) => `/credential/${id}`,
-  CREDENTIALS: '/credentials',
-  CREDENTIALS_W3C: '/credentials/w3c',
+  
 
   CREDENTIAL_DEFINITIONS: '/credential-definitions',
   CREDENTIAL_DEFINITION: (id: string) => `/credential-definitions/${id}`,
@@ -128,6 +129,13 @@ export const API_PATH = {
   SCHEMA_STORAGE: '/schema-storage',
   SCHEMA_STORAGE_SYNC: '/schema-storage/sync-created',
   SCHEMA_STORAGE_ITEM: (id: string) => `/schema-storage/${id}`,
+
+  // TO REPLACE by /sis/student-info and /sis/student-name
+  // ELLUCIAN_STUDENT_INFO: '/topic/ellucian/student-info',
+  // ELLUCIAN_STUDENT_NAME: '/topic/ellucian/student-name',
+
+  SIS_STUDENT_TRANSCRIPT: '/sis/student-transcript',
+  SIS_STUDENT_ID: '/sis/student-id',
 
   TENANT_SELF: '/tenant',
   TENANT_ENDORSER_CONNECTION: '/tenant/endorser-connection',

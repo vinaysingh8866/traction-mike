@@ -75,7 +75,7 @@ export const useConnectionStore = defineStore('connection', () => {
         }
       )
       .then((res) => {
-        console.log(res);
+        console.log("res", res);
         invitationData = res.data;
       })
       .then(() => {
