@@ -41,12 +41,13 @@ OR
 kubectl get pods
 ```
 The above command should show following 4 PODS with RUNNING status:
+```console
 NAME                                                READY   STATUS
 my-release-postgresql-0                             1/1     Running
 my-release-traction-acapy-6bff754d59-g7scz          1/1     Running
 my-release-traction-tenant-proxy-55c84fcc9b-n4b87   1/1     Running
 my-release-traction-tenant-ui-84c6df8768-t52p8      1/1     Running
-
+```
 
 ### FOR arm64 ARCHITECHTURE
 
@@ -97,7 +98,8 @@ Create a new generic secret `<secret-name>.yaml` file with any file name.
 vim postgres_secret.yaml 
 ```
 Paste the following contents in the above .yaml file
-`apiVersion: v1
+```console
+apiVersion: v1
 data:
   admin-password: ZmRSa1ZVY3R4dVZyb290VQ==
   database-password: MllGSE15RUt2WFJsa3ZlWQ==
@@ -116,7 +118,9 @@ metadata:
   namespace: default
   resourceVersion: "33572"
   uid: ee93e114-1b7e-4338-b6a1-a8a26b08ad14
-type: Opaque`
+type: Opaque
+```
+
 Save the file 
 
 Apply the secret file into kubernetes cluster by executing command:
