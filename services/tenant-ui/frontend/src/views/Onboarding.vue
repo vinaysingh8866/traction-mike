@@ -40,14 +40,17 @@
                 :label="$t('onboarding.clear')"
                 icon="pi pi-times"
                 class="button-clear"
-                :disabled="!studentId && !fullName"
+                :disabled="
+                  !studentId && !fullName && !error && !studentFullName
+                "
                 @click="clearForm"
               />
+
               <Button
                 :label="$t('onboarding.submit')"
                 icon="pi pi-check"
                 class="button-submit"
-                :disabled="!studentId || !fullName"
+                :disabled="!studentId || !fullName || !studentFullName"
                 type="submit"
               />
             </div>
@@ -112,7 +115,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { io } from 'socket.io-client';
 import { useI18n } from 'vue-i18n';
 import Accordion from 'primevue/accordion';
@@ -129,7 +132,7 @@ import {
   useConfigStore,
 } from '@/store';
 import { useToast } from 'vue-toastification';
-import { defineStore, storeToRefs } from 'pinia';
+import { storeToRefs } from 'pinia';
 
 const { t } = useI18n();
 const studentId = ref('');
@@ -139,7 +142,7 @@ const error = ref(false);
 let errMessage: string = '';
 const invitation_url = ref('');
 const showModal = ref(false);
-const studentFullName = ref('');
+const studentFullName = ref(false);
 const loadingQRCode = ref(false);
 let response: any = null;
 const { createInvitation } = useConnectionStore();
@@ -152,10 +155,11 @@ const contactAdded = ref(false);
 const credentialIssued = ref(false);
 const credentialOffered = ref(false);
 
-// creation invitation aries-rfcs 0160 Connection Protocol
-const submitForm = async () => {
+let socket: any;
+
+const initializeSocket = () => {
   const baseUrl = config.value.frontend.sisProxyPath;
-  const socket = io(`${baseUrl}`, {
+  socket = io(`${baseUrl}`, {
     transports: ['websocket'],
   });
 
@@ -167,7 +171,61 @@ const submitForm = async () => {
     console.error('Connection Error:', err);
   });
 
-  studentFullName.value = '';
+  socket.on('eventUpdate', async (data: any) => {
+    console.log('Event received:', data);
+
+    if (data.details?.state === 'request') {
+      credentialOffered.value = false;
+      qrCodeScanned.value = true;
+    }
+
+    if (data.details?.state === 'active' && !credentialOffered.value) {
+      qrCodeScanned.value = false;
+      contactAdded.value = true;
+      console.log(`Student ${data.details.alias} successfully added!`);
+      console.log('Issuing student ID....');
+      try {
+        const payload = {
+          auto_issue: true,
+          auto_remove: false,
+          connection_id: `${data.details.connection_id}`,
+          cred_def_id: `${data.cred_def_id}`,
+          credential_preview: {
+            '@type': 'issue-credential/1.0/credential-preview',
+            attributes: JSON.parse(JSON.stringify(data.attributes)),
+          },
+          trace: false,
+        };
+
+        await issuerStore.offerCredential(payload);
+        credentialOffered.value = true;
+        toast.info('Credential Offer Sent');
+      } catch (error) {
+        toast.error(`Failure: ${error}`);
+      }
+    }
+
+    if (data.details?.state === 'offer_sent') {
+      contactAdded.value = true;
+      credentialIssued.value = true;
+      credentialOffered.value = true;
+      console.log('Student Received Student ID credential!');
+    }
+  });
+};
+
+onMounted(() => {
+  initializeSocket();
+});
+
+onUnmounted(() => {
+  if (socket) {
+    socket.disconnect();
+  }
+});
+
+const submitForm = async () => {
+  studentFullName.value = false;
   try {
     const result: any = await createInvitation(
       `${fullName.value} -studentID- ${studentId.value}`,
@@ -178,58 +236,6 @@ const submitForm = async () => {
       console.log(`Invitation URL: ${result.invitation_url}`);
       showModal.value = true;
     }
-
-    socket.on(
-      'eventUpdate',
-      async (data: {
-        details: { state: string; alias: any; connection_id: any };
-        cred_def_id: any;
-        attributes: any;
-      }) => {
-        console.log('Event received:', data);
-
-        if (data.details?.state === 'request') {
-          qrCodeScanned.value = true;
-        }
-
-        if (data.details?.state === 'active' && !credentialOffered.value) {
-          qrCodeScanned.value = false;
-          contactAdded.value = true;
-          credentialOffered.value = true;
-          console.log(`Student ${data.details.alias} successfully added!`);
-          console.log('Issuing student ID....');
-          try {
-            const payload = {
-              auto_issue: true,
-              auto_remove: false,
-              connection_id: `${data.details.connection_id}`,
-              cred_def_id: `${data.cred_def_id}`,
-              credential_preview: {
-                '@type': 'issue-credential/1.0/credential-preview',
-                attributes: JSON.parse(JSON.stringify(data.attributes)),
-              },
-              trace: false,
-            };
-            await issuerStore.offerCredential(payload);
-            toast.info('Credential Offer Sent');
-          } catch (error) {
-            toast.error(`Failure: ${error}`);
-          }
-        }
-
-        if (data.details?.state === 'offer_sent') {
-          contactAdded.value = true;
-          credentialIssued.value = true;
-          console.log(
-            'Student Received and Accepted the Student ID credential!'
-          );
-        }
-      }
-    );
-
-    onUnmounted(() => {
-      socket.disconnect();
-    });
   } catch (err: any) {
     console.error('Error during invitation creation:', err.message);
   }
@@ -241,7 +247,7 @@ const clearForm = () => {
   error.value = false;
   showModal.value = false;
   invitation_url.value = '';
-  studentFullName.value = '';
+  studentFullName.value = false;
   qrCodeScanned.value = false;
   contactAdded.value = false;
   credentialIssued.value = false;
@@ -251,16 +257,16 @@ const clearForm = () => {
 const handleIdLookUp = async () => {
   error.value = false;
   fullName.value = '';
-  studentFullName.value = '';
-  fullName.value = '';
-  studentFullName.value = '';
+  studentFullName.value = false;
   loading.value = true;
   try {
     response = await idLookup(studentId.value);
     if (response && response.studentIdCred) {
       console.log('response', response);
       fullName.value = response.studentIdCred.fullName;
-      studentFullName.value = response.studentIdCred.fullName;
+      if (response.studentIdCred.fullName) {
+        studentFullName.value = true;
+      }
       loading.value = false;
     } else {
       errMessage = t('onboarding.notFound');
