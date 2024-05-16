@@ -32,6 +32,106 @@ The command deploys Traction and PostgrSQL on the Kubernetes cluster in the defa
 
 > **Tip**: List all releases using `helm list`
 
+After deploying Traction and PostgreSQL on the Kubernetes Cluster, execute the below command to check the if all the pods inside the namespace are up and running 
+```console
+kubectl get pods -n default   
+```
+OR 
+```console
+kubectl get pods
+```
+The above command should show following 4 PODS with RUNNING status:
+NAME                                                READY   STATUS
+my-release-postgresql-0                             1/1     Running
+my-release-traction-acapy-6bff754d59-g7scz          1/1     Running
+my-release-traction-tenant-proxy-55c84fcc9b-n4b87   1/1     Running
+my-release-traction-tenant-ui-84c6df8768-t52p8      1/1     Running
+
+
+### FOR arm64 ARCHITECHTURE
+
+If pods: `my-release-traction-acapy, my-release-traction-tenant-proxy, my-release-traction-tenant-ui` shows ImagePullBackOff status, execute the below command to check the Error in the Events section:
+```console
+kubectl describe pod <pod-name> -n default
+```
+If the Events section shows Error-> `Failed to pull image 'ghcr.io/bcgov/traction-plugins-acapy:0.4.2': no matching manifest for linux/arm64/v8 in the manifest list entries`, it means the current image being pulled is not compatible with arm64 architechture. For such cases, follow below steps:
+```console
+cd traction/charts/traction
+```
+```console
+vim values.yaml
+```
+
+Search for `acapy:` Image and overrite `tag: ""` to `tag: "sha-079a089@sha256:9be2d1a2f31a1d98369c2e73d9d8985e11e5a3796b9d51c8f4074861003c7232"`
+Search for `tenant_proxy:` Image and overrite `tag: ""` to `tag: "sha-a3672d9@sha256:180485c86b2ba3b72727a5d05301280e4d3922905c3796f2093d812f5091997f"`
+Search fpr `ui:` Image and overrite `tag: ""` tp `tag: "sha-8acbdd1@sha256:394cb45dbc22f7868c5dc6f82aefa723ff4b04dbb6fa360099913ceab8267cdd"`
+
+Save the `values.yaml` file.
+
+Delete the existing deployment by executing Helm command:
+```console
+helm delete my-release 
+```
+
+Redeploy a new deployment to kubernetes cluster using the new `values/yaml` file and Helm command:
+```console
+helm install --values=values.yaml my-release traction/traction 
+```
+Check the pods into the namesapce once again, and the pods should be in RUNNING status
+```console
+kubectl get pods
+```
+
+
+If pods: `my-release-postgresql-0` shows CreateContainerConfigError, this is because the pod is looking for a secret named `my-release-postgresql`.
+
+Goto 
+```console
+cd charts/traction/templates/acapy
+```
+
+Create a new generic secret `<secret-name>.yaml` file with any file name.
+```console
+vim postgres_secret.yaml 
+```
+Paste the following contents in the above .yaml file
+`apiVersion: v1
+data:
+  admin-password: ZmRSa1ZVY3R4dVZyb290VQ==
+  database-password: MllGSE15RUt2WFJsa3ZlWQ==
+  database-user: YWNhcHk=
+kind: Secret
+metadata:
+  annotations:
+    helm.sh/resource-policy: keep
+    meta.helm.sh/release-name: my-release
+    meta.helm.sh/release-namespace: default
+  creationTimestamp: "2024-05-13T17:06:00Z"
+  labels:
+    app.kubernetes.io/instance: my-release
+    app.kubernetes.io/managed-by: Helm
+  name: my-release-postgresql
+  namespace: default
+  resourceVersion: "33572"
+  uid: ee93e114-1b7e-4338-b6a1-a8a26b08ad14
+type: Opaque`
+Save the file 
+
+Apply the secret file into kubernetes cluster by executing command:
+```console
+kubectl apply -f postgres_secret.yaml
+```
+
+Check if the new secret is created by executing command:
+```console
+kubectl get secrets -n default
+```
+If the result shows `my-release-postgresql` in the list, then the secret is successfully created. 
+
+The `my-release-postgresql-0` pod should now be up and showing RUNNING status.
+
+
+
 ## Uninstalling the Chart
 
 To uninstall/delete the `my-release` deployment:
