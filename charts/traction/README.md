@@ -63,7 +63,9 @@ vim values.yaml
 ```
 
 Search for `acapy:` Image and overrite `tag: ""` to `tag: "sha-079a089@sha256:9be2d1a2f31a1d98369c2e73d9d8985e11e5a3796b9d51c8f4074861003c7232"`
+
 Search for `tenant_proxy:` Image and overrite `tag: ""` to `tag: "sha-a3672d9@sha256:180485c86b2ba3b72727a5d05301280e4d3922905c3796f2093d812f5091997f"`
+
 Search fpr `ui:` Image and overrite `tag: ""` tp `tag: "sha-8acbdd1@sha256:394cb45dbc22f7868c5dc6f82aefa723ff4b04dbb6fa360099913ceab8267cdd"`
 
 Save the `values.yaml` file.
