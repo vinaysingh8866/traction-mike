@@ -7,12 +7,12 @@
             <div class="form-group transcript-group">
               <label for="studentID">{{ $t('transcript.studentID') }}</label>
               <div class="input-and-button">
-                <InputText id="schema" v-model="schema" required />
+                <InputText id="idField" v-model="idField" required />
                 <Button
                   :label="$t('transcript.findTranscript')"
                   icon="pi pi-search"
                   class="search-transcript"
-                  :disabled="!schema || loading"
+                  :disabled="!idField || loading"
                   @click="findTranscript"
                 />
               </div>
@@ -23,29 +23,29 @@
               <div v-else-if="error" class="center-content">
                 <p class="text-error">{{ errMessage }}</p>
               </div>
-              <div v-if="fetchedSchema" class="center-content">
+              <div v-if="fetchedTranscript" class="center-content">
                 <h3>{{ $t('transcript.details') }}</h3>
-                <div v-if="fetchedSchema.studentCumulativeTranscript">
+                <div v-if="fetchedTranscript.studentCumulativeTranscript">
                   <strong>{{ $t('transcript.cumulativeTranscript') }}</strong>
                   <ul>
                     <li>
                       {{ $t('transcript.cumulativeAttemptedCredits') }}
                       {{
-                        fetchedSchema.studentCumulativeTranscript[0]
+                        fetchedTranscript.studentCumulativeTranscript[0]
                           ?.cumulativeAttemptedCredits
                       }}
                     </li>
                     <li>
                       {{ $t('transcript.cumulativeEarnedCredits') }}
                       {{
-                        fetchedSchema.studentCumulativeTranscript[0]
+                        fetchedTranscript.studentCumulativeTranscript[0]
                           ?.cumulativeEarnedCredits
                       }}
                     </li>
                     <li>
                       {{ $t('transcript.cumulativeGradePointAverage') }}
                       {{
-                        fetchedSchema.studentCumulativeTranscript[0]
+                        fetchedTranscript.studentCumulativeTranscript[0]
                           ?.cumulativeGradePointAverage
                       }}
                     </li>
@@ -54,14 +54,14 @@
 
                 <div
                   v-if="
-                    fetchedSchema.courseTranscript &&
-                    fetchedSchema.courseTranscript.length > 0
+                    fetchedTranscript.courseTranscript &&
+                    fetchedTranscript.courseTranscript.length > 0
                   "
                 >
                   <strong>{{ $t('transcript.courseTranscript') }}</strong>
                   <ul>
                     <li
-                      v-for="course in fetchedSchema.courseTranscript"
+                      v-for="course in fetchedTranscript.courseTranscript"
                       :key="course.courseCode"
                     >
                       {{
@@ -100,21 +100,21 @@
 
 <script setup lang="ts">
 import { ref, Ref } from 'vue';
-import { useGovernanceStore } from '@/store/governanceStore';
+import { useGovernanceStore } from '@/store/governanceStore'; //kept the unused import for future use
 import { useI18n } from 'vue-i18n';
 import Accordion from 'primevue/accordion';
 import AccordionTab from 'primevue/accordiontab';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import MainCardContent from '@/components/layout/mainCard/MainCardContent.vue';
-import { useStudentStore, useConnectionStore } from '@/store';
+import { useStudentStore, useConnectionStore } from '@/store'; //kept the unused import for future use
 
-interface ExtendedSchema {
+interface Transcript {
   attrNames?: string[];
 }
 
-interface ExtendedSchemaStorageRecord {
-  schema?: ExtendedSchema;
+interface TranscriptDetails {
+  idField?: Transcript;
   studentCumulativeTranscript?: {
     cumulativeAttemptedCredits: number;
     cumulativeEarnedCredits: number;
@@ -133,9 +133,8 @@ interface ExtendedSchemaStorageRecord {
 }
 
 const { t } = useI18n();
-const schema = ref('');
-const fetchedSchema: Ref<ExtendedSchemaStorageRecord | null> = ref(null);
-//const { getStoredSchemas } = useGovernanceStore();
+const idField = ref('');
+const fetchedTranscript: Ref<TranscriptDetails | null> = ref(null);
 const { getStudentInfo } = useStudentStore();
 const loading = ref(false);
 const error = ref(false);
@@ -143,13 +142,13 @@ let errMessage = '';
 
 function submitForm() {
   console.log('Submitting:', {
-    schema: schema.value,
+    idField: idField.value,
   });
 }
 
 function clearForm() {
-  schema.value = '';
-  fetchedSchema.value = null; // Reset the fetchedSchema to clear displayed details
+  idField.value = '';
+  fetchedTranscript.value = null;
 }
 
 const findTranscript = async () => {
@@ -157,11 +156,9 @@ const findTranscript = async () => {
   error.value = false;
 
   try {
-    const studentInfo = await getStudentInfo(schema.value);
-    console.log(schema.value);
-    console.log(studentInfo);
+    const studentInfo = await getStudentInfo(idField.value);
     if (studentInfo) {
-      fetchedSchema.value = studentInfo;
+      fetchedTranscript.value = studentInfo;
     } else {
       throw new Error(t('transcript.notFound'));
     }
