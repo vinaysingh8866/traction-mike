@@ -150,8 +150,8 @@ const emit = defineEmits(['closed', 'success']);
 
 // The default placeholder JSON to start with for this form
 // (or supplied by parent component)
-const proofRequestJson = computed(() => {
-  return props.existingPresReq
+const proofRequestJson = computed(() =>
+  props.existingPresReq
     ? props.existingPresReq
     : ({
         name: 'proof-request',
@@ -168,8 +168,8 @@ const proofRequestJson = computed(() => {
           },
         },
         requested_predicates: {},
-      } as IndyProofRequest);
-});
+      } as IndyProofRequest)
+);
 
 // Autocomplete setup
 // These can maybe be generalized into a util function (for all dropdown searches)
