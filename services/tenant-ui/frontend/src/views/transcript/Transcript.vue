@@ -4,43 +4,76 @@
       <Accordion :multiple="true">
         <AccordionTab header="Transcript Form">
           <form class="transcript-form" @submit.prevent="submitForm">
-            <div class="form-group schema-group">
-              <label for="schema">{{ $t('transcript.schema') }}</label>
+            <div class="form-group transcript-group">
+              <label for="studentID">{{ $t('transcript.studentID') }}</label>
               <div class="input-and-button">
-                <InputText id="schema" v-model="schema" required />
+                <InputText id="idField" v-model="idField" required />
                 <Button
-                  :label="$t('transcript.schemaLookup')"
+                  :label="$t('transcript.findTranscript')"
                   icon="pi pi-search"
-                  class="schema-lookup"
-                  @click="schemaLookup"
+                  class="search-transcript"
+                  :disabled="!idField || loading"
+                  @click="findTranscript"
                 />
               </div>
-            </div>
-            <!-- Only display this section if fetchedSchema has been set -->
-            <div v-if="fetchedSchema">
-              <div
-                v-if="
-                  fetchedSchema.schema &&
-                  fetchedSchema.schema.attrNames &&
-                  fetchedSchema.schema.attrNames.length > 0
-                "
-              >
+              <div v-if="loading" class="center-content">
+                <i class="pi pi-spin pi-spinner" style="font-size: 2em"></i>
+                <p>{{ $t('transcript.fetching') }}</p>
+              </div>
+              <div v-else-if="error" class="center-content">
+                <p class="text-error">{{ errMessage }}</p>
+              </div>
+              <div v-if="fetchedTranscript" class="center-content">
                 <h3>{{ $t('transcript.details') }}</h3>
-                <div>
-                  <strong>{{ $t('transcript.attributes') }}</strong>
+                <div v-if="fetchedTranscript.studentCumulativeTranscript">
+                  <strong>{{ $t('transcript.cumulativeTranscript') }}</strong>
                   <ul>
-                    <li
-                      v-for="attrName in fetchedSchema.schema.attrNames"
-                      :key="attrName"
-                    >
-                      {{ attrName }}
+                    <li>
+                      {{ $t('transcript.cumulativeAttemptedCredits') }}
+                      {{
+                        fetchedTranscript.studentCumulativeTranscript[0]
+                          ?.cumulativeAttemptedCredits
+                      }}
+                    </li>
+                    <li>
+                      {{ $t('transcript.cumulativeEarnedCredits') }}
+                      {{
+                        fetchedTranscript.studentCumulativeTranscript[0]
+                          ?.cumulativeEarnedCredits
+                      }}
+                    </li>
+                    <li>
+                      {{ $t('transcript.cumulativeGradePointAverage') }}
+                      {{
+                        fetchedTranscript.studentCumulativeTranscript[0]
+                          ?.cumulativeGradePointAverage
+                      }}
                     </li>
                   </ul>
                 </div>
-              </div>
-              <div v-else>
-                <strong>{{ $t('transcript.attributes') }}</strong>
-                {{ $t('transcript.noAttributes') }}
+
+                <div
+                  v-if="
+                    fetchedTranscript.courseTranscript &&
+                    fetchedTranscript.courseTranscript.length > 0
+                  "
+                >
+                  <strong>{{ $t('transcript.courseTranscript') }}</strong>
+                  <ul>
+                    <li
+                      v-for="course in fetchedTranscript.courseTranscript"
+                      :key="course.courseCode"
+                    >
+                      {{
+                        $t('transcript.courseDetails', {
+                          title: course.courseTitle,
+                          code: course.courseCode,
+                          grade: course.finalLetterGradeEarned,
+                        })
+                      }}
+                    </li>
+                  </ul>
+                </div>
               </div>
             </div>
 
@@ -67,56 +100,77 @@
 
 <script setup lang="ts">
 import { ref, Ref } from 'vue';
-import { useGovernanceStore } from '@/store/governanceStore';
+import { useGovernanceStore } from '@/store/governanceStore'; //kept the unused import for future use
 import { useI18n } from 'vue-i18n';
 import Accordion from 'primevue/accordion';
 import AccordionTab from 'primevue/accordiontab';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import MainCardContent from '@/components/layout/mainCard/MainCardContent.vue';
-import { SchemaStorageRecord, Schema } from '@/types/acapyApi/acapyInterface';
+import { useStudentStore, useConnectionStore } from '@/store'; //kept the unused import for future use
 
-import {
-  Schema as BaseSchema,
-  SchemaStorageRecord as BaseSchemaStorageRecord,
-} from '@/types/acapyApi/acapyInterface';
-
-// Extend the original Schema to include detailed property types
-interface ExtendedSchema extends BaseSchema {
+interface Transcript {
   attrNames?: string[];
 }
 
-// Extend the SchemaStorageRecord to use ExtendedSchema
-interface ExtendedSchemaStorageRecord extends BaseSchemaStorageRecord {
-  schema?: ExtendedSchema;
+interface TranscriptDetails {
+  idField?: Transcript;
+  studentCumulativeTranscript?: {
+    cumulativeAttemptedCredits: number;
+    cumulativeEarnedCredits: number;
+    cumulativeGradePointAverage: number;
+  }[];
+  courseTranscript?: {
+    schoolYear: number;
+    term: string;
+    courseTitle: string;
+    courseCode: string;
+    academicPeriod: number;
+    earnedCredits: number;
+    finalNumericGradeEarned: number;
+    finalLetterGradeEarned: string;
+  }[];
 }
 
 const { t } = useI18n();
-const schema = ref('');
-const fetchedSchema: Ref<ExtendedSchemaStorageRecord | null> = ref(null);
-const { getStoredSchemas } = useGovernanceStore();
+const idField = ref('');
+const fetchedTranscript: Ref<TranscriptDetails | null> = ref(null);
+const { getStudentInfo } = useStudentStore();
+const loading = ref(false);
+const error = ref(false);
+let errMessage = '';
 
 function submitForm() {
   console.log('Submitting:', {
-    schema: schema.value,
+    idField: idField.value,
   });
 }
 
 function clearForm() {
-  schema.value = '';
-  fetchedSchema.value = null; // Reset the fetchedSchema to clear displayed details
+  idField.value = '';
+  fetchedTranscript.value = null;
 }
 
-async function schemaLookup() {
+const findTranscript = async () => {
+  loading.value = true;
+  error.value = false;
+
   try {
-    const schemas = await getStoredSchemas();
-    const foundSchema = schemas?.find((s) => s.schema_id === schema.value);
-    fetchedSchema.value = foundSchema || null;
-  } catch (error) {
-    console.error('Error fetching schema:', error);
-    fetchedSchema.value = null;
+    const studentInfo = await getStudentInfo(idField.value);
+    if (studentInfo) {
+      fetchedTranscript.value = studentInfo;
+    } else {
+      throw new Error(t('transcript.notFound'));
+    }
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    console.error('Error fetching student info:', errorMessage);
+    errMessage = errorMessage;
+    error.value = true;
+  } finally {
+    loading.value = false;
   }
-}
+};
 </script>
 
 <style scoped>
@@ -132,17 +186,17 @@ async function schemaLookup() {
   margin-bottom: 20px;
 }
 
-.schema-group .input-and-button {
+.transcript-group .input-and-button {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
 }
 
-.schema-group input {
+.transcript-group input {
   width: 100%;
 }
 
-.schema-lookup {
+.search-transcript {
   margin-top: 8px;
   width: auto;
 }
@@ -188,7 +242,7 @@ label {
   .button-submit {
     margin-left: 0;
   }
-  .schema-group .input-and-button {
+  .transcript-group .input-and-button {
     align-items: stretch;
   }
 }
