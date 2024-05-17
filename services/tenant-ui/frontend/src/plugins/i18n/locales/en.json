@@ -575,6 +575,7 @@
     "credentialHeldBy": "Credential is held by",
     "credentialTamperFree ": "Credential is tamper-free ",
     "credentialValid": "Credential is valid",
+    "noAttrChecked": "Please choose at least one attribute to verify!",
     "presentationShouldHaveStatus": "This is not the component you are looking for, presentation should have status='verified'",
     "status: ": "Status",
     "updatedAt": "Updated at",
