@@ -5,10 +5,7 @@
         <div class="pt-4 pb-6">
           <img src="/img/digicred/digicred.png" class="logo-bc" />
 
-          <img
-            src="/img/digicred/CrMS.svg"
-            class="logo-traction"
-          />
+          <img src="/img/digicred/CrMS.svg" class="logo-traction" />
         </div>
 
         <div class="py-8">

@@ -38,8 +38,8 @@ export const useIssuerStore = defineStore('issuer', () => {
     error.value = null;
     loading.value = true;
 
-    let result = null;  
-    console.log("payload",payload)
+    let result = null;
+    console.log('payload', payload);
     await acapyApi
       .postHttp(API_PATH.ISSUE_CREDENTIALS_SEND_OFFER, payload)
       .then((res) => {
