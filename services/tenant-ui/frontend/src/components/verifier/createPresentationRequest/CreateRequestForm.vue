@@ -7,7 +7,7 @@
           for="selectedConnection"
           :class="{ 'p-error': v$.selectedConnection.$invalid && submitted }"
         >
-          {{ $t('verify.connection') }}
+          {{ t('verify.connection') }}
           <ProgressSpinner v-if="connectionsLoading" />
         </label>
 
@@ -28,31 +28,48 @@
           >{{ v$.selectedConnection.required.$message }}</small
         >
       </div>
-
-      <!-- Proof req body -->
-      <span>{{ $t('verify.presentationRequestBody') }}</span>
-      <JsonEditorVue
-        ref="jsonEditorVueRef"
-        v-model="proofRequestJson"
-        v-bind="JSON_EDITOR_DEFAULTS"
-      />
-
-      <!-- Auto Verify -->
-      <div class="field mb-0 mt-2">
-        <label for="autoVerify">
-          {{ $t('verify.autoVerify') }}
-          <i
-            v-tooltip="$t('verify.autoVerifyHelp')"
-            class="pi pi-question-circle"
-          />
-        </label>
-        <InputSwitch id="autoVerify" v-model="v$.autoVerify.$model" />
+      <!-- Schema -->
+      <div class="field">
+        <label
+          for="schema"
+          :class="{ 'p-error': !formFields.schema_id && submitted }"
+          >{{ t('issue.schema') }}</label
+        >
+        <Dropdown
+          id="schema_id"
+          v-model="formFields.schema_id"
+          :options="storedSchemas"
+          option-value="schema_id"
+          option-label="schema_id"
+          class="w-full"
+          :placeholder="t('configuration.credentialDefinitions.selectSchema')"
+          @change="selectedAttrNames = selectedSchema?.schema.attrNames"
+        />
+        <small v-if="!formFields.schema_id && submitted" class="p-error">{{
+          v$.selectedConnection.required.$message
+        }}</small>
+      </div>
+      <div
+        v-for="attrName of selectedSchema?.schema.attrNames"
+        :key="attrName"
+        class="flex align-items-center mb-2"
+      >
+        <Checkbox
+          v-model="selectedAttrNames"
+          :input-id="attrName"
+          name="category"
+          :value="attrName"
+        />
+        <label :for="attrName" class="ml-2"> {{ attrName }}</label>
+      </div>
+      <div v-if="!selectedAttrNames?.length && selectedSchema" class="p-error">
+        {{ t('verifier.noAttrChecked') }}
       </div>
 
       <!-- Comment -->
       <div class="field">
         <label for="comment">
-          {{ $t('verify.comment') }}
+          {{ t('verify.comment') }}
         </label>
         <Textarea
           id="comment"
@@ -65,7 +82,7 @@
 
       <Button
         type="submit"
-        :label="$t('common.submit')"
+        :label="t('common.submit')"
         class="w-full"
         :disabled="loading"
       />
@@ -79,33 +96,50 @@ import {
   IndyProofRequest,
   V10PresentationSendRequestRequest,
 } from '@/types/acapyApi/acapyInterface';
-
+import { SchemaStorageRecord } from '@/types';
 // Vue
-import { reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 // PrimeVue / Validation / etc
 import AutoComplete from 'primevue/autocomplete';
 import Button from 'primevue/button';
-import InputSwitch from 'primevue/inputswitch';
 import ProgressSpinner from 'primevue/progressspinner';
 import Textarea from 'primevue/textarea';
-// import ProgressSpinner from 'primevue/progressspinner';
 import { required } from '@vuelidate/validators';
 import { useVuelidate } from '@vuelidate/core';
 import { useToast } from 'vue-toastification';
 // State
 import { storeToRefs } from 'pinia';
-import { useConnectionStore, useVerifierStore } from '@/store';
-// Other imports
-import JsonEditorVue from 'json-editor-vue';
-import { JSON_EDITOR_DEFAULTS } from '@/helpers/constants';
+import {
+  useConnectionStore,
+  useGovernanceStore,
+  useVerifierStore,
+} from '@/store';
+import { useI18n } from 'vue-i18n';
+// PrimeVue
+import Dropdown from 'primevue/dropdown';
+import Checkbox from 'primevue/checkbox';
 
 const toast = useToast();
+const { t } = useI18n();
 
 // Store values
 const { loading } = storeToRefs(useVerifierStore());
 const { loading: connectionsLoading, connectionsDropdown } =
   storeToRefs(useConnectionStore());
 const verifierStore = useVerifierStore();
+
+// Schema values
+const governanceStore = useGovernanceStore();
+const { storedSchemas } = storeToRefs(useGovernanceStore());
+const selectedAttrNames = ref<string[] | undefined>([]);
+const selectedSchema = computed(() =>
+  storedSchemas
+    ? storedSchemas.value.find(
+        (schema: SchemaStorageRecord) =>
+          schema.schema_id === formFields.schema_id
+      )
+    : undefined
+);
 
 // Props
 const props = defineProps<{
@@ -116,7 +150,7 @@ const emit = defineEmits(['closed', 'success']);
 
 // The default placeholder JSON to start with for this form
 // (or supplied by parent component)
-const proofRequestJson = ref(
+const proofRequestJson = computed(() =>
   props.existingPresReq
     ? props.existingPresReq
     : ({
@@ -125,26 +159,15 @@ const proofRequestJson = ref(
         version: '1.0',
         requested_attributes: {
           studentInfo: {
-            names: ['given_names', 'family_name'],
+            names: selectedAttrNames.value,
             restrictions: [
               {
-                schema_name: 'student id',
+                schema_name: selectedSchema.value?.schema.name,
               },
             ],
           },
         },
-        requested_predicates: {
-          not_expired: {
-            name: 'expiry_dateint',
-            p_type: '>=',
-            p_value: 20230527,
-            restrictions: [
-              {
-                schema_name: 'student id',
-              },
-            ],
-          },
-        },
+        requested_predicates: {},
       } as IndyProofRequest)
 );
 
@@ -172,11 +195,13 @@ const formFields = reactive({
   // This is not good typescript but need an object with fields
   // in a dropdown that displays a string that can be blank. TODO
   selectedConnection: undefined as any,
+  schema_id: '' as string,
 });
 const rules = {
   autoVerify: {},
   comment: {},
   selectedConnection: { required },
+  schema_id: { required },
 };
 const v$ = useVuelidate(rules, formFields);
 
@@ -184,8 +209,7 @@ const v$ = useVuelidate(rules, formFields);
 const submitted = ref(false);
 const handleSubmit = async (isFormValid: boolean) => {
   submitted.value = true;
-
-  if (!isFormValid) {
+  if (!isFormValid || !selectedAttrNames.value?.length) {
     return;
   }
   try {
@@ -213,4 +237,14 @@ const handleSubmit = async (isFormValid: boolean) => {
     submitted.value = false;
   }
 };
+// Lifecycle hooks
+onMounted(async () => {
+  try {
+    await governanceStore.listStoredSchemas();
+    // Wait til schemas are loaded so the getter can map together the schemas to creds
+  } catch (err) {
+    console.error(err);
+    toast.error(`Failure: ${err}`);
+  }
+});
 </script>
