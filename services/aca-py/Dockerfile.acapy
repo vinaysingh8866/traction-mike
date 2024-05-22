@@ -1,4 +1,4 @@
-FROM traction:plugins-acapy
+FROM --platform=$BUILDPLATFORM traction:plugins-acapy
 
 USER root
 
