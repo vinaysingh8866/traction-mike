@@ -3,92 +3,77 @@
     <MainCardContent :title="$t('transcript.transcript')">
       <Accordion :multiple="true">
         <AccordionTab header="Transcript Form">
-          <form class="transcript-form" @submit.prevent="submitForm">
-            <div class="form-group transcript-group">
-              <label for="studentID">{{ $t('transcript.studentID') }}</label>
-              <div class="input-and-button">
-                <InputText id="idField" v-model="idField" required />
+          <form
+            class="transcript-form"
+            @submit.prevent="handleSubmit(!v$.$invalid)"
+          >
+            <!-- Connection -->
+            <div class="field mt-5">
+              <label
+                for="selectedConnection"
+                :class="{
+                  'p-error': v$.selectedConnection.$invalid && submitted,
+                }"
+                >{{ $t('common.connectionName') }}
+                <ProgressSpinner v-if="connectionLoading" />
+              </label>
+              <div class="flex align-items-center">
+                <AutoComplete
+                  id="selectedConnection"
+                  v-model="v$.selectedConnection.$model"
+                  class="w-full"
+                  :disabled="connectionLoading"
+                  :suggestions="connectionsList"
+                  :dropdown="true"
+                  option-label="label"
+                  force-selection
+                  @complete="searchConnections($event)"
+                />
+                <span v-if="metaDataLoading" class="ml-2">
+                  <i class="pi pi-spin pi-spinner" style="font-size: 1.2em" />
+                </span>
+              </div>
+
+              <small
+                v-if="v$.selectedConnection.$invalid && submitted"
+                class="p-error"
+                >{{ v$.selectedConnection.required.$message }}</small
+              >
+              <div v-if="!isMetaData" class="field">
+                <span class="p-error"> {{ $t('transcript.noMetaData') }}</span>
+                <label for="studentID" class="mt-2">{{
+                  $t('transcript.studentID')
+                }}</label>
+                <InputText
+                  id="studentID"
+                  v-model="v$.studentID.$model"
+                  required
+                  @input="transcriptContent = ''"
+                />
                 <Button
                   :label="$t('transcript.findTranscript')"
                   icon="pi pi-search"
-                  class="search-transcript"
-                  :disabled="!idField || loading"
-                  @click="findTranscript"
+                  class="ml-2"
+                  :disabled="!v$.studentID.$model || transcriptLoading"
+                  @click="getTranscript(v$.studentID.$model)"
                 />
-              </div>
-              <div v-if="loading" class="center-content">
-                <i class="pi pi-spin pi-spinner" style="font-size: 2em"></i>
-                <p>{{ $t('transcript.fetching') }}</p>
-              </div>
-              <div v-else-if="error" class="center-content">
-                <p class="text-error">{{ errMessage }}</p>
-              </div>
-              <div v-if="fetchedTranscript" class="center-content">
-                <h3>{{ $t('transcript.details') }}</h3>
-                <div v-if="fetchedTranscript.studentCumulativeTranscript">
-                  <strong>{{ $t('transcript.cumulativeTranscript') }}</strong>
-                  <ul>
-                    <li>
-                      {{ $t('transcript.cumulativeAttemptedCredits') }}
-                      {{
-                        fetchedTranscript.studentCumulativeTranscript[0]
-                          ?.cumulativeAttemptedCredits
-                      }}
-                    </li>
-                    <li>
-                      {{ $t('transcript.cumulativeEarnedCredits') }}
-                      {{
-                        fetchedTranscript.studentCumulativeTranscript[0]
-                          ?.cumulativeEarnedCredits
-                      }}
-                    </li>
-                    <li>
-                      {{ $t('transcript.cumulativeGradePointAverage') }}
-                      {{
-                        fetchedTranscript.studentCumulativeTranscript[0]
-                          ?.cumulativeGradePointAverage
-                      }}
-                    </li>
-                  </ul>
-                </div>
-
-                <div
-                  v-if="
-                    fetchedTranscript.courseTranscript &&
-                    fetchedTranscript.courseTranscript.length > 0
-                  "
-                >
-                  <strong>{{ $t('transcript.courseTranscript') }}</strong>
-                  <ul>
-                    <li
-                      v-for="course in fetchedTranscript.courseTranscript"
-                      :key="course.courseCode"
-                    >
-                      {{
-                        $t('transcript.courseDetails', {
-                          title: course.courseTitle,
-                          code: course.courseCode,
-                          grade: course.finalLetterGradeEarned,
-                        })
-                      }}
-                    </li>
-                  </ul>
+                <span v-if="transcriptLoading" class="ml-2">
+                  <i class="pi pi-spin pi-spinner" style="font-size: 1.2em" />
+                </span>
+                <div v-if="transcriptContent === false" class="p-error">
+                  {{ $t('transcript.noTranscript') }}
                 </div>
               </div>
-            </div>
 
-            <div class="form-actions">
               <Button
-                :label="$t('transcript.clear')"
-                icon="pi pi-times"
-                class="button-clear"
-                @click="clearForm"
-              />
-              <Button
-                :label="$t('transcript.submit')"
-                icon="pi pi-check"
-                class="button-submit"
                 type="submit"
+                label="Send Transcript"
+                icon="pi pi-check"
+                class="mt-5"
+                :disabled="
+                  connectionLoading || transcriptLoading || !transcriptContent
+                "
+                :loading="connectionLoading"
               />
             </div>
           </form>
@@ -99,78 +84,203 @@
 </template>
 
 <script setup lang="ts">
-import { ref, Ref } from 'vue';
-import { useGovernanceStore } from '@/store/governanceStore'; //kept the unused import for future use
-import { useI18n } from 'vue-i18n';
+import { ref, reactive, onMounted, watch } from 'vue';
+import { storeToRefs } from 'pinia';
+import { useStudentStore, useConnectionStore, useIssuerStore } from '@/store';
 import Accordion from 'primevue/accordion';
 import AccordionTab from 'primevue/accordiontab';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
+import AutoComplete from 'primevue/autocomplete';
 import MainCardContent from '@/components/layout/mainCard/MainCardContent.vue';
-import { useStudentStore, useConnectionStore } from '@/store'; //kept the unused import for future use
+import { useVuelidate } from '@vuelidate/core';
+import { required } from '@vuelidate/validators';
+import useGetItem from '@/composables/useGetItem';
+import { API_PATH } from '@/helpers/constants';
+import { useToast } from 'vue-toastification';
 
-interface Transcript {
-  attrNames?: string[];
-}
+const { getStudentInfo, idLookup } = useStudentStore();
 
-interface TranscriptDetails {
-  idField?: Transcript;
-  studentCumulativeTranscript?: {
-    cumulativeAttemptedCredits: number;
-    cumulativeEarnedCredits: number;
-    cumulativeGradePointAverage: number;
-  }[];
-  courseTranscript?: {
-    schoolYear: number;
-    term: string;
-    courseTitle: string;
-    courseCode: string;
-    academicPeriod: number;
-    earnedCredits: number;
-    finalNumericGradeEarned: number;
-    finalLetterGradeEarned: string;
-  }[];
-}
+const toast = useToast();
 
-const { t } = useI18n();
-const idField = ref('');
-const fetchedTranscript: Ref<TranscriptDetails | null> = ref(null);
-const { getStudentInfo } = useStudentStore();
-const loading = ref(false);
-const error = ref(false);
-let errMessage = '';
+// Metadata
+const metadataMap = ref();
+const isMetaData = ref(true);
+const metaDataLoading = ref(false);
 
-function submitForm() {
-  console.log('Submitting:', {
-    idField: idField.value,
-  });
-}
+// Form and Validation
+const connectionsList = ref();
+const formFields = reactive({
+  selectedConnection: undefined as any,
+  studentID: '',
+});
+const rules = {
+  selectedConnection: { required },
+  studentID: {
+    required: isMetaData.value ? false : required,
+  },
+};
+const v$ = useVuelidate(rules, formFields);
+// State
+const connectionStore = useConnectionStore();
+const { connectionsDropdown, loading: connectionLoading } =
+  storeToRefs(useConnectionStore());
 
-function clearForm() {
-  idField.value = '';
-  fetchedTranscript.value = null;
-}
-
-const findTranscript = async () => {
-  loading.value = true;
-  error.value = false;
-
-  try {
-    const studentInfo = await getStudentInfo(idField.value);
-    if (studentInfo) {
-      fetchedTranscript.value = studentInfo;
-    } else {
-      throw new Error(t('transcript.notFound'));
-    }
-  } catch (err: unknown) {
-    const errorMessage = err instanceof Error ? err.message : String(err);
-    console.error('Error fetching student info:', errorMessage);
-    errMessage = errorMessage;
-    error.value = true;
-  } finally {
-    loading.value = false;
+const searchConnections = (event: any) => {
+  if (!event.query.trim().length) {
+    connectionsList.value = [...(connectionsDropdown as any).value];
+  } else {
+    connectionsList.value = (connectionsDropdown.value as any).filter(
+      (connection: any) => {
+        return connection.label
+          .toLowerCase()
+          .includes(event.query.toLowerCase());
+      }
+    );
   }
 };
+
+// Get Metadata
+const fetchMetadata = async (connection_id: string) => {
+  metaDataLoading.value = true;
+  const { item, fetchItem } = useGetItem(
+    API_PATH.CONNECTIONS_METADATA(connection_id)
+  );
+  await fetchItem();
+  if (item.value?.results.student_id) {
+    metadataMap.value = item.value;
+    await getTranscript(metadataMap.value.results.student_id);
+    await createPayload();
+  } else {
+    isMetaData.value = false;
+  }
+  metaDataLoading.value = false;
+};
+
+// Transcript
+const transcriptLoading = ref(false);
+const transcriptContent = ref();
+// Get transcript
+const getTranscript = async (student_id: string) => {
+  transcriptLoading.value = true;
+  (await getStudentInfo(student_id))
+    ? (transcriptContent.value = await getStudentInfo(student_id))
+    : (transcriptContent.value = false);
+  if (isMetaData.value === false && transcriptContent.value) {
+    const studentInfo = await idLookup(student_id);
+    if (studentInfo) {
+      metadataMap.value = {
+        results: {
+          last_name: studentInfo.studentIdCred?.lastName,
+          first_name: studentInfo.studentIdCred?.firstName,
+          student_id: studentInfo.studentIdCred?.studentsId,
+        },
+      };
+      await createPayload();
+    }
+  }
+  transcriptLoading.value = false;
+};
+
+// Payload
+const payload = ref();
+// Create payload
+const createPayload = async () => {
+  payload.value = {
+    auto_issue: true,
+    auto_remove: false,
+    connection_id: formFields.selectedConnection.value,
+    // TODO: Replace hardcoded credential ID with a dynamic value
+    cred_def_id: 'EYkeHjvuGtyyfMmhp2Qh9f:3:CL:99:usStateCollegeTrascript',
+    credential_preview: {
+      '@type': 'issue-credential/1.0/credential-preview',
+      attributes: [
+        {
+          name: 'Last',
+          value: metadataMap.value.results.last_name,
+        },
+        {
+          name: 'First',
+          value: metadataMap.value.results.first_name,
+        },
+        {
+          name: 'Expiration',
+          value: '20250101',
+        },
+        {
+          name: 'StudentID',
+          value: metadataMap.value.results.student_id,
+        },
+        {
+          name: 'Middle',
+          value: '',
+        },
+        {
+          name: 'Transcript',
+          value: JSON.stringify(transcriptContent.value),
+        },
+        {
+          name: 'School',
+          value: 'Cape Fear Community College',
+        },
+        {
+          name: 'GPA',
+          value: '',
+        },
+      ],
+    },
+    trace: false,
+  };
+};
+
+// Submit
+const issuerStore = useIssuerStore();
+const submitted = ref(false);
+// Submit function
+const handleSubmit = async (isFormValid: boolean) => {
+  submitted.value = true;
+  if (!isFormValid) {
+    return;
+  }
+  try {
+    await issuerStore.offerCredential(payload.value);
+    toast.info('Transcript Sent');
+  } catch (error) {
+    toast.error(`Failure: ${error}`);
+  } finally {
+    submitted.value = false;
+    // Reset values
+    transcriptLoading.value = false;
+    transcriptContent.value = '';
+    isMetaData.value = true;
+    payload.value = {};
+    // Clear dropdown and reset form fields
+    formFields.selectedConnection = undefined;
+    connectionsList.value = [];
+    formFields.studentID = '';
+  }
+};
+
+watch(
+  () => formFields.selectedConnection,
+  () => {
+    if (formFields.selectedConnection) {
+      // Reset values
+      transcriptLoading.value = false;
+      transcriptContent.value = '';
+      isMetaData.value = true;
+      payload.value = {};
+      fetchMetadata(formFields.selectedConnection.value);
+    }
+  },
+  { deep: true }
+);
+
+onMounted(async () => {
+  connectionStore.listConnections().catch((err) => {
+    console.error(`Failure: ${err}`);
+  });
+});
 </script>
 
 <style scoped>
@@ -196,11 +306,6 @@ const findTranscript = async () => {
   width: 100%;
 }
 
-.search-transcript {
-  margin-top: 8px;
-  width: auto;
-}
-
 .form-group input {
   width: 100%;
 }
@@ -213,10 +318,6 @@ label {
 .form-actions {
   display: flex;
   justify-content: space-between;
-}
-
-.button-clear {
-  margin-right: auto;
 }
 
 .button-submit {
@@ -235,7 +336,6 @@ label {
     flex-direction: column;
     align-items: stretch;
   }
-  .button-clear,
   .button-submit {
     margin-top: 10px;
   }
