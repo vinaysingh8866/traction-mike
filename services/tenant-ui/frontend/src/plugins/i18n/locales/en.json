@@ -35,7 +35,9 @@
     "courseTranscript": "Course Transcript",
     "courseDetails": "{title} ({code}): {grade}",
     "fetching": "Fetching...",
-    "notFound": "Student not found"
+    "notFound": "Student not found",
+    "noMetaData": "This connection doesn't have metadata! Enter the student ID to send the transcript.",
+    "noTranscript": "There is no transcript with this student ID!"
   },
   "about": {
     "about": "About",
