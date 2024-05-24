@@ -20,7 +20,6 @@ async function loadApp() {
   const pinia = createPinia();
   app.use(pinia);
 
-
   const configStore = useConfigStore();
   const unsubscribe = configStore.$onAction(({ name, after, onError }) => {
     if (name === 'load') {
@@ -31,13 +30,14 @@ async function loadApp() {
       onError((err) => {
         console.error('error loading configuration from server');
         console.error(err);
-        throw new Error(`Failed to acquire configuration: ${(err as Error).message}`);
+        throw new Error(
+          `Failed to acquire configuration: ${(err as Error).message}`
+        );
       });
     }
   });
   await configStore.load();
   unsubscribe();
-
 
   const MATOMO_URL: string = configStore.config.frontend.matomoUrl;
   if (MATOMO_URL) {
@@ -65,24 +65,6 @@ async function loadApp() {
 }
 
 loadApp();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // import router from './router';
 // import { createApp } from 'vue';
