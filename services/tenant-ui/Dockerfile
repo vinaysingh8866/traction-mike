@@ -1,5 +1,5 @@
 # Use a Debian-based Node.js image
-FROM node:18-buster
+FROM --platform=$BUILDPLATFORM node:18-buster
 
 # Set the working directory in the container
 WORKDIR /usr/src/app
@@ -11,7 +11,7 @@ COPY . .
 RUN apt-get update && apt-get install -y bash
 
 # Install backend libraries
-RUN npm cache clean --force && npm ci
+RUN npm cache clean --force && npm ci --verbose
 
 # Install frontend libraries
 RUN cd frontend && npm cache clean --force && npm ci

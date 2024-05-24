@@ -14,7 +14,6 @@ jobs:
   build_acapy:
     name: 'Build Traction Aca-Py'
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'bcgov'
     steps:
       - uses: actions/checkout@v4    
       - name: Build Aca-Py Image
@@ -24,6 +23,7 @@ jobs:
           context: './plugins'
           dockerfile: './plugins/docker/Dockerfile'
           image_name: ${{ github.repository_owner}}/traction-plugins-acapy
+          platform: linux/amd64, linux/arm64
           registry: ghcr.io
           registry_username: ${{ github.repository_owner}}
           registry_password: ${{ secrets.GITHUB_TOKEN }}
@@ -31,7 +31,6 @@ jobs:
   build_ui:
     name: 'Build Tenant UI'
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'bcgov'
     steps:      
       - uses: actions/checkout@v4
       - name: Build UI
@@ -40,6 +39,7 @@ jobs:
         with:
           context: './services/tenant-ui'
           image_name: ${{ github.repository_owner}}/traction-tenant-ui
+          platform: linux/amd64, linux/arm64
           registry: ghcr.io
           registry_username: ${{ github.repository_owner}}
           registry_password: ${{ secrets.GITHUB_TOKEN }}
@@ -47,7 +47,6 @@ jobs:
   build_proxy:
     name: 'Build Tenant Proxy Image'
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'bcgov'
     steps:
       - uses: actions/checkout@v4
       - name: Build Tenant Proxy Image
@@ -57,6 +56,7 @@ jobs:
           context: './plugins'
           dockerfile: './plugins/docker/Dockerfile.tenant-proxy'
           image_name: ${{ github.repository_owner}}/traction-tenant-proxy
+          platform: linux/amd64, linux/arm64
           registry: ghcr.io
           registry_username: ${{ github.repository_owner}}
           registry_password: ${{ secrets.GITHUB_TOKEN }}

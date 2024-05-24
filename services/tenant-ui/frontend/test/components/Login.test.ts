@@ -37,9 +37,7 @@ describe('LoginForm', async () => {
 
     //Images from path
     expect(wrapper.html()).toContain('src="/img/digicred/digicred.png"');
-    expect(wrapper.html()).toContain(
-      'src="/img/digicred/CrMS.svg"'
-    );
+    expect(wrapper.html()).toContain('src="/img/digicred/CrMS.svg"');
   });
 
   test('when login mode is preset to STATUS render status component', async () => {
