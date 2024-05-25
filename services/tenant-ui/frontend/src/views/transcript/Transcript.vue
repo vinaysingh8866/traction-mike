@@ -65,6 +65,10 @@
                 </div>
               </div>
 
+              <div v-if="transcriptContent" class="pt-4 transcriptContent">
+                <vue-json-pretty :data="transcriptContent" />
+              </div>
+
               <Button
                 type="submit"
                 label="Send Transcript"
@@ -98,6 +102,7 @@ import { required } from '@vuelidate/validators';
 import useGetItem from '@/composables/useGetItem';
 import { API_PATH } from '@/helpers/constants';
 import { useToast } from 'vue-toastification';
+import VueJsonPretty from 'vue-json-pretty';
 
 const { getStudentInfo, idLookup } = useStudentStore();
 
@@ -322,6 +327,13 @@ label {
 
 .button-submit {
   margin-left: auto;
+}
+
+:deep(.transcriptContent .vjs-tree-node) {
+  line-height: 14px !important;
+}
+:deep(.transcriptContent .vjs-tree-node) {
+  font-size: 12px !important;
 }
 
 @media (max-width: 768px) {
