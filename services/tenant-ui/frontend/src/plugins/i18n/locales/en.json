@@ -23,6 +23,8 @@
     "submit": "Submit",
     "clear": "Clear",
     "findTranscript": "Find Transcript",
+    "firstName": "First Name",
+    "lastName": "Last Name",
     "details": "Transcript Details",
     "id": "ID:",
     "attributes": "Attributes:",
