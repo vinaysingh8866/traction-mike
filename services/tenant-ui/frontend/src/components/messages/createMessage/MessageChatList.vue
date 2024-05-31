@@ -76,7 +76,7 @@ const props = defineProps({
 
 // Array to contain the messages
 const messageStore = useMessageStore();
-const { messages } = storeToRefs(messageStore);
+const { messages, newMessage } = storeToRefs(messageStore);
 
 const filteredMessages = computed(() => {
   return messages.value
@@ -154,6 +154,51 @@ const displayTime = (
 
   return message;
 };
+
+/**
+ * Listen for new messages on the messageStore
+ */
+watch(newMessage, (newContent) => {
+  if (newContent && newContent.connection_id === props.connectionId) {
+    const now = new Date();
+    const tempMessage: Message = {
+      connection_id: newContent.connection_id,
+      content: newContent.content,
+      created_at: now.toISOString(),
+      message_id: '',
+      sent_time: now.toISOString(),
+      state: 'sent',
+      updated_at: now.toISOString(),
+      displayTime: false,
+    };
+    messages.value.push(tempMessage);
+  }
+});
+
+let mounted = false;
+
+onMounted(() => {
+  mounted = true;
+  console.log('MessageChatList mounted');
+});
+
+/**
+ * Scroll to the bottom of the chat window whenever
+ * a new message is added.
+ */
+onUpdated(() => {
+  const chat = document.querySelector('.p-sidebar-content');
+
+  if (!chat) return; // Guard clause
+  if (mounted) {
+    // If first render no animation
+    chat.scrollTop = chat.scrollHeight;
+    mounted = false;
+  } else {
+    // Fancy animation
+    chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
+  }
+});
 </script>
 
 <style scoped lang="scss">

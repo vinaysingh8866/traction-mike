@@ -183,7 +183,8 @@ const toast = useToast();
 const messageStore = useMessageStore();
 const { listConnections, findConnectionName } = useConnectionStore();
 
-const { loading, messages, selectedMessage } = storeToRefs(useMessageStore());
+const { loading, messages, selectedMessage, newMessage } =
+  storeToRefs(messageStore);
 const { connections } = storeToRefs(useConnectionStore());
 
 const sidebarVisible = ref(false);
@@ -229,6 +230,10 @@ const sendMessage = () => {
   messageStore.sendMessage(selectedMessageDetails.value.connection_id, {
     content: message.value,
   });
+  newMessage.value = {
+    connection_id: selectedMessageDetails.value.connection_id,
+    content: message.value,
+  }; // Update newMessage with the new message details
   message.value = ''; // Blank the form
 };
 
