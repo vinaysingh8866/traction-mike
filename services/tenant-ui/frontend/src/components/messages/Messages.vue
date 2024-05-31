@@ -53,7 +53,7 @@
         :show-filter-match-modes="false"
       >
         <template #body="{ data }">
-          <div @click="onRowClick(data)">
+          <div>
             <LoadingLabel :value="data.connection" />
           </div>
         </template>
@@ -197,8 +197,20 @@ const selectedMessageDetails = ref({
 const message = ref(''); // Store new message
 
 // Function to handle row click and show the sidebar
-const onRowClick = ({ data }: any) => {
+const onRowClick = (event: any) => {
+  if (!event || !event.data) {
+    console.error('Row click event data is undefined', { event });
+    return;
+  }
+
+  const data = event.data;
+
   console.log('Row clicked:', data); // Debugging log
+
+  if (!data || !data.connection_id || !data.connection) {
+    console.error('Data missing connection_id or connection:', { data });
+    return;
+  }
 
   selectedMessageDetails.value = {
     connection_id: data.connection_id,
