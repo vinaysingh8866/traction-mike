@@ -6,7 +6,7 @@
   </div>
   <div class="container">
     <div
-      v-for="item in messageList"
+      v-for="item in filteredMessages"
       :key="item.message_id"
       :class="item.state === 'received' ? 'theirs' : 'mine'"
       class="message"
@@ -23,7 +23,15 @@
 
 <script setup lang="ts">
 // Vue
-import { ref, PropType, watch, onUpdated, onMounted, defineProps } from 'vue';
+import {
+  computed,
+  ref,
+  PropType,
+  watch,
+  onUpdated,
+  onMounted,
+  defineProps,
+} from 'vue';
 import { storeToRefs } from 'pinia';
 
 // State
@@ -54,11 +62,6 @@ const formatTime = (time: string) => {
   }
 };
 
-// Array to contain the messages
-const messageList = ref<Array<Message>>([]);
-// Connect to the message store
-const messageStore = useMessageStore();
-
 // Props
 const props = defineProps({
   connectionId: {
@@ -69,6 +72,18 @@ const props = defineProps({
     type: String as PropType<string>,
     required: true,
   },
+});
+
+// Array to contain the messages
+const messageStore = useMessageStore();
+const { messages } = storeToRefs(messageStore);
+
+const filteredMessages = computed(() => {
+  return messages.value
+    .filter((message) => message.connection_id === props.connectionId)
+    .filter(filterMessages)
+    .sort(sortMessages)
+    .map(displayTime);
 });
 
 /**
@@ -139,67 +154,6 @@ const displayTime = (
 
   return message;
 };
-
-// Change: Updated to use the existing listMessages method
-const getMessagesForConnection = async () => {
-  const messages = await messageStore.listMessages();
-  messageList.value = messages
-    .filter((msg) => msg.connection_id === props.connectionId) // Filter by connection ID
-    .filter(filterMessages)
-    .sort(sortMessages)
-    .map(displayTime);
-};
-
-watch(
-  () => props.connectionId,
-  () => {
-    getMessagesForConnection();
-  },
-  { immediate: true }
-);
-
-const { newMessage } = storeToRefs(useMessageStore());
-
-/**
- * Listen for new messages on the messageStore
- */
-watch(newMessage, (newContent) => {
-  if (newContent.connection_id !== props.connectionId) return; // Ensure the message is relevant
-  const now = new Date();
-  const tempMessage: Message = {
-    connection_id: props.connectionId,
-    content: newContent.content,
-    created_at: now.toISOString(),
-    message_id: '',
-    sent_time: now.toISOString(),
-    state: 'sent',
-    updated_at: now.toISOString(),
-    displayTime: false,
-  };
-  messageList.value.push(tempMessage);
-});
-
-let mounted = false;
-
-onMounted(() => {
-  mounted = true;
-});
-
-/**
- * Scroll to the bottom of the chat window whenever
- * a new message is added.
- */
-onUpdated(() => {
-  const chat = document.querySelector('.p-sidebar-content');
-
-  if (!chat) return;
-  if (mounted) {
-    chat.scrollTop = chat.scrollHeight;
-    mounted = false;
-  } else {
-    chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
-  }
-});
 </script>
 
 <style scoped lang="scss">
