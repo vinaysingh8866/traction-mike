@@ -52,7 +52,9 @@
         :show-filter-match-modes="false"
       >
         <template #body="{ data }">
-          <LoadingLabel :value="data.connection" />
+          <div @click="onRowClick(data)">
+            <LoadingLabel :value="data.connection" />
+          </div>
         </template>
         <template #filter="{ filterModel, filterCallback }">
           <InputText
@@ -119,6 +121,30 @@
         </template>
       </Column>
     </DataTable>
+    <Sidebar
+      v-model:visible="sidebarVisible"
+      :position="'right'"
+      :full-screen="false"
+      class="wider-sidebar"
+    >
+      <MessageChatList
+        :connection-id="selectedMessageDetails.connection_id"
+        :connection-name="selectedMessageDetails.connection"
+      />
+      <div
+        v-if="stringOrBooleanTruthy(config.frontend.showWritableComponents)"
+        class="p-inputgroup flex-1 send-message"
+      >
+        <InputText
+          v-model="message"
+          type="text"
+          placeholder="Send Message"
+          autofocus
+          @keydown="onKeydown"
+        />
+        <Button icon="pi pi-send" @click="sendMessage" />
+      </div>
+    </Sidebar>
   </MainCardContent>
 </template>
 
@@ -132,6 +158,8 @@ import DataTable from 'primevue/datatable';
 import InputText from 'primevue/inputtext';
 import InputIcon from 'primevue/inputicon';
 import IconField from 'primevue/iconfield';
+import Sidebar from 'primevue/sidebar';
+import Button from 'primevue/button';
 import { useToast } from 'vue-toastification';
 // State
 import { useConnectionStore, useMessageStore } from '@/store';
@@ -143,12 +171,11 @@ import { TABLE_OPT } from '@/helpers/constants';
 import MainCardContent from '../layout/mainCard/MainCardContent.vue';
 import CreateMessage from './createMessage/CreateMessage.vue';
 import LoadingLabel from '../common/LoadingLabel.vue';
+import MessageChatList from './createMessage/MessageChatList.vue';
 
 // State
 import { useConfigStore } from '@/store/configStore';
 const { config } = storeToRefs(useConfigStore());
-
-console.log('config', config);
 
 const toast = useToast();
 
@@ -158,20 +185,65 @@ const { listConnections, findConnectionName } = useConnectionStore();
 const { loading, messages, selectedMessage } = storeToRefs(useMessageStore());
 const { connections } = storeToRefs(useConnectionStore());
 
-const loadTable = async () => {
-  // should return latest message first
-  messageStore.listMessages().catch((err: any) => {
-    toast.error(`Failure: ${err}`);
-  });
+const sidebarVisible = ref(false);
+const selectedMessageDetails = ref({
+  connection_id: '',
+  connection: '',
+  message_id: '',
+  content: '',
+});
 
-  // Load connections if not already there for display
-  if (!connections.value || !connections.value.length) {
-    listConnections().catch((err) => {
-      console.error(err);
-      toast.error(`Failure: ${err}`);
-    });
+const message = ref(''); // Store new message
+
+// Function to handle row click and show the sidebar
+const onRowClick = (data: any) => {
+  selectedMessageDetails.value = {
+    connection_id: data.connection_id,
+    connection: data.connection,
+    message_id: data.message_id,
+    content: data.content,
+  };
+  sidebarVisible.value = true;
+};
+
+const sendMessage = () => {
+  // No empty messages
+  if (message.value.length === 0) return;
+
+  messageStore.sendMessage(selectedMessageDetails.value.connection_id, {
+    content: message.value,
+  });
+  message.value = ''; // Blank the form
+};
+
+/**
+ * When the user hits enter, send the message.
+ * @param event KeyboardEvent
+ */
+const onKeydown = (event: KeyboardEvent) => {
+  if (event.key === 'Enter') {
+    sendMessage();
   }
 };
+
+// Fetch messages only once when the component mounts
+const loadTable = async () => {
+  try {
+    await messageStore.listMessages();
+  } catch (err) {
+    toast.error(`Failure: ${err}`);
+  }
+
+  if (!connections.value || !connections.value.length) {
+    try {
+      await listConnections();
+    } catch (err) {
+      console.error(err);
+      toast.error(`Failure: ${err}`);
+    }
+  }
+};
+
 const expandedRows = ref([]);
 const formattedMessages = computed(() =>
   messages.value.map((msg: Message) => ({
@@ -184,6 +256,7 @@ const formattedMessages = computed(() =>
     created_at: formatDateLong(msg.created_at),
   }))
 );
+
 const filter = ref({
   content: {
     value: null,
@@ -215,3 +288,18 @@ onMounted(() => {
   loadTable();
 });
 </script>
+
+<style>
+.send-message {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 90% !important;
+  margin: 1rem 1rem 2rem 1.6rem;
+}
+
+.wider-sidebar {
+  width: 32.8rem !important; /* Adjusted width for the sidebar */
+}
+</style>
