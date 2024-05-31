@@ -20,6 +20,7 @@
       selection-mode="single"
       data-key="message_id"
       filter-display="menu"
+      @row-click="onRowClick"
     >
       <template #header>
         <div class="flex justify-content-between">
@@ -196,13 +197,16 @@ const selectedMessageDetails = ref({
 const message = ref(''); // Store new message
 
 // Function to handle row click and show the sidebar
-const onRowClick = (data: any) => {
+const onRowClick = ({ data }: any) => {
+  console.log('Row clicked:', data); // Debugging log
+
   selectedMessageDetails.value = {
     connection_id: data.connection_id,
     connection: data.connection,
     message_id: data.message_id,
     content: data.content,
   };
+  console.log('Selected message details:', selectedMessageDetails.value); // Debugging log
   sidebarVisible.value = true;
 };
 

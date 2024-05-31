@@ -1,7 +1,7 @@
 <template>
   <div class="title">
     <h2>
-      {{ $t('connect.message.messageConnection', [connectionName]) }}
+      {{ $t('connect.message.messageConnection', [props.connectionName]) }}
     </h2>
   </div>
   <div class="container">
