@@ -1,98 +1,93 @@
 <template>
-  <div class="transcript-container">
-    <MainCardContent :title="$t('transcript.transcript')">
-      <Accordion :multiple="true">
-        <AccordionTab header="Transcript Form">
-          <form
-            class="transcript-form"
-            @submit.prevent="handleSubmit(!v$.$invalid)"
+  <MainCardContent :title="$t('transcript.transcript')">
+    <Panel class="mb-5" header="Transcript Form">
+      <form
+        class="transcript-form"
+        @submit.prevent="handleSubmit(!v$.$invalid)"
+      >
+        <!-- Connection -->
+        <div class="field mt-5">
+          <label
+            for="selectedConnection"
+            :class="{
+              'p-error': v$.selectedConnection.$invalid && submitted,
+            }"
+            >{{ $t('common.connectionName') }}
+            <ProgressSpinner v-if="connectionLoading" />
+          </label>
+          <div class="flex align-items-center">
+            <AutoComplete
+              id="selectedConnection"
+              v-model="v$.selectedConnection.$model"
+              class="w-full"
+              :disabled="connectionLoading"
+              :suggestions="connectionsList"
+              :dropdown="true"
+              option-label="label"
+              force-selection
+              @complete="searchConnections($event)"
+            />
+            <span v-if="metaDataLoading" class="ml-2">
+              <i class="pi pi-spin pi-spinner" style="font-size: 1.2em" />
+            </span>
+          </div>
+
+          <small
+            v-if="v$.selectedConnection.$invalid && submitted"
+            class="p-error"
+            >{{ v$.selectedConnection.required.$message }}</small
           >
-            <!-- Connection -->
-            <div class="field mt-5">
-              <label
-                for="selectedConnection"
-                :class="{
-                  'p-error': v$.selectedConnection.$invalid && submitted,
-                }"
-                >{{ $t('common.connectionName') }}
-                <ProgressSpinner v-if="connectionLoading" />
-              </label>
-              <div class="flex align-items-center">
-                <AutoComplete
-                  id="selectedConnection"
-                  v-model="v$.selectedConnection.$model"
-                  class="w-full"
-                  :disabled="connectionLoading"
-                  :suggestions="connectionsList"
-                  :dropdown="true"
-                  option-label="label"
-                  force-selection
-                  @complete="searchConnections($event)"
-                />
-                <span v-if="metaDataLoading" class="ml-2">
-                  <i class="pi pi-spin pi-spinner" style="font-size: 1.2em" />
-                </span>
-              </div>
-
-              <small
-                v-if="v$.selectedConnection.$invalid && submitted"
-                class="p-error"
-                >{{ v$.selectedConnection.required.$message }}</small
-              >
-              <div v-if="!isMetaData" class="field">
-                <span class="p-error"> {{ $t('transcript.noMetaData') }}</span>
-                <label for="studentID" class="mt-2">{{
-                  $t('transcript.studentID')
-                }}</label>
-                <InputText
-                  id="studentID"
-                  v-model="v$.studentID.$model"
-                  required
-                  @input="transcriptContent = ''"
-                />
-                <Button
-                  :label="$t('transcript.findTranscript')"
-                  icon="pi pi-search"
-                  class="ml-2"
-                  :disabled="!v$.studentID.$model || transcriptLoading"
-                  @click="getTranscript(v$.studentID.$model)"
-                />
-                <span v-if="transcriptLoading" class="ml-2">
-                  <i class="pi pi-spin pi-spinner" style="font-size: 1.2em" />
-                </span>
-                <div v-if="transcriptContent === false" class="p-error">
-                  {{ $t('transcript.noTranscript') }}
-                </div>
-              </div>
-
-              <div v-if="transcriptContent" class="pt-4 transcriptContent">
-                <vue-json-pretty :data="transcriptContent" />
-              </div>
-
-              <Button
-                type="submit"
-                label="Send Transcript"
-                icon="pi pi-check"
-                class="mt-5"
-                :disabled="
-                  connectionLoading || transcriptLoading || !transcriptContent
-                "
-                :loading="connectionLoading"
-              />
+          <div v-if="!isMetaData" class="field">
+            <span class="p-error"> {{ $t('transcript.noMetaData') }}</span>
+            <label for="studentID" class="mt-2">{{
+              $t('transcript.studentID')
+            }}</label>
+            <InputText
+              id="studentID"
+              v-model="v$.studentID.$model"
+              required
+              @input="transcriptContent = ''"
+            />
+            <Button
+              :label="$t('transcript.findTranscript')"
+              icon="pi pi-search"
+              class="ml-2"
+              :disabled="!v$.studentID.$model || transcriptLoading"
+              @click="getTranscript(v$.studentID.$model)"
+            />
+            <span v-if="transcriptLoading" class="ml-2">
+              <i class="pi pi-spin pi-spinner" style="font-size: 1.2em" />
+            </span>
+            <div v-if="transcriptContent === false" class="p-error">
+              {{ $t('transcript.noTranscript') }}
             </div>
-          </form>
-        </AccordionTab>
-      </Accordion>
-    </MainCardContent>
-  </div>
+          </div>
+
+          <div v-if="transcriptContent" class="pt-4 transcriptContent">
+            <vue-json-pretty :data="transcriptContent" />
+          </div>
+
+          <Button
+            type="submit"
+            label="Send Transcript"
+            icon="pi pi-check"
+            class="mt-5"
+            :disabled="
+              connectionLoading || transcriptLoading || !transcriptContent
+            "
+            :loading="connectionLoading"
+          />
+        </div>
+      </form>
+    </Panel>
+  </MainCardContent>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useStudentStore, useConnectionStore, useIssuerStore } from '@/store';
-import Accordion from 'primevue/accordion';
-import AccordionTab from 'primevue/accordiontab';
+import Panel from 'primevue/panel';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import AutoComplete from 'primevue/autocomplete';
@@ -289,10 +284,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.transcript-container {
-  padding: 20px;
-}
-
 .transcript-form {
   max-width: 650px;
 }
