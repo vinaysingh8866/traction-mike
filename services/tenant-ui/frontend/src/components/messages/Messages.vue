@@ -206,7 +206,7 @@ const onRowClick = (event: any) => {
 
   const data = event.data;
 
-  console.log('Row clicked:', data); // Debugging log
+  console.log('Row clicked:', data);
 
   if (!data || !data.connection_id || !data.connection) {
     console.error('Data missing connection_id or connection:', { data });
