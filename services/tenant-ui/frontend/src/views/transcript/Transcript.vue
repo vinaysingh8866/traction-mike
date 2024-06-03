@@ -62,9 +62,41 @@
               {{ $t('transcript.noTranscript') }}
             </div>
           </div>
-
-          <div v-if="transcriptContent" class="pt-4 transcriptContent">
-            <vue-json-pretty :data="transcriptContent" />
+          <div
+            v-if="transcriptContent && !transcriptLoading"
+            class="pt-4 transcriptContent"
+          >
+            <Card>
+              <template #content>
+                <div>
+                  <strong>{{ `${$t('transcript.studentID')}: ` }}</strong>
+                  {{ metadataMap?.results?.student_id }}
+                </div>
+                <div>
+                  <strong>{{ `${$t('transcript.firstName')}: ` }}</strong>
+                  {{ metadataMap?.results?.first_name }}
+                </div>
+                <div>
+                  <strong>{{ `${$t('transcript.lastName')}: ` }}</strong
+                  >{{ metadataMap?.results?.last_name }}
+                </div>
+                <hr />
+                <div
+                  v-for="(course, index) in transcriptContent?.courseTranscript"
+                  :key="index"
+                >
+                  <div v-for="(value, key) in course" :key="key">
+                    <strong>{{ `${updateKey(key)}:` }}</strong>
+                    {{ value }}
+                  </div>
+                  <hr
+                    v-if="
+                      index !== transcriptContent?.courseTranscript?.length - 1
+                    "
+                  />
+                </div>
+              </template>
+            </Card>
           </div>
 
           <Button
@@ -91,13 +123,14 @@ import Panel from 'primevue/panel';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import AutoComplete from 'primevue/autocomplete';
+import Card from 'primevue/card';
 import MainCardContent from '@/components/layout/mainCard/MainCardContent.vue';
 import { useVuelidate } from '@vuelidate/core';
 import { required } from '@vuelidate/validators';
 import useGetItem from '@/composables/useGetItem';
 import { API_PATH } from '@/helpers/constants';
 import { useToast } from 'vue-toastification';
-import VueJsonPretty from 'vue-json-pretty';
+import { useSisApi } from '@/store/sisApi';
 
 const { getStudentInfo, idLookup } = useStudentStore();
 
@@ -147,7 +180,7 @@ const fetchMetadata = async (connection_id: string) => {
     API_PATH.CONNECTIONS_METADATA(connection_id)
   );
   await fetchItem();
-  if (item.value?.results.student_id) {
+  if (item.value?.results?.student_id) {
     metadataMap.value = item.value;
     await getTranscript(metadataMap.value.results.student_id);
     await createPayload();
@@ -166,6 +199,10 @@ const getTranscript = async (student_id: string) => {
   (await getStudentInfo(student_id))
     ? (transcriptContent.value = await getStudentInfo(student_id))
     : (transcriptContent.value = false);
+  // There is a transcript but it's empty
+  if (transcriptContent.value?.courseTranscript?.length === 0) {
+    transcriptContent.value = false;
+  }
   if (isMetaData.value === false && transcriptContent.value) {
     const studentInfo = await idLookup(student_id);
     if (studentInfo) {
@@ -184,24 +221,28 @@ const getTranscript = async (student_id: string) => {
 
 // Payload
 const payload = ref();
+const sisApi = useSisApi();
+const credentialDefinitionId = ref();
 // Create payload
 const createPayload = async () => {
+  const GPA =
+    transcriptContent.value?.studentCumulativeTranscript[0]?.cumulativeGradePointAverage?.toString() ??
+    '';
   payload.value = {
     auto_issue: true,
     auto_remove: false,
     connection_id: formFields.selectedConnection.value,
-    // TODO: Replace hardcoded credential ID with a dynamic value
-    cred_def_id: 'EYkeHjvuGtyyfMmhp2Qh9f:3:CL:99:usStateCollegeTrascript',
+    cred_def_id: credentialDefinitionId.value,
     credential_preview: {
       '@type': 'issue-credential/1.0/credential-preview',
       attributes: [
         {
           name: 'Last',
-          value: metadataMap.value.results.last_name,
+          value: metadataMap.value?.results?.last_name,
         },
         {
           name: 'First',
-          value: metadataMap.value.results.first_name,
+          value: metadataMap.value?.results?.first_name,
         },
         {
           name: 'Expiration',
@@ -209,7 +250,7 @@ const createPayload = async () => {
         },
         {
           name: 'StudentID',
-          value: metadataMap.value.results.student_id,
+          value: metadataMap.value?.results?.student_id,
         },
         {
           name: 'Middle',
@@ -217,7 +258,7 @@ const createPayload = async () => {
         },
         {
           name: 'Transcript',
-          value: JSON.stringify(transcriptContent.value),
+          value: JSON.stringify(transcriptContent.value?.courseTranscript),
         },
         {
           name: 'School',
@@ -225,7 +266,7 @@ const createPayload = async () => {
         },
         {
           name: 'GPA',
-          value: '',
+          value: GPA,
         },
       ],
     },
@@ -261,6 +302,12 @@ const handleSubmit = async (isFormValid: boolean) => {
   }
 };
 
+// Convert the key to title case and insert space before capital letters after lowercase letters
+const updateKey = (input: any) =>
+  input
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/^./, (str: string) => str.toUpperCase());
+
 watch(
   () => formFields.selectedConnection,
   () => {
@@ -280,6 +327,9 @@ onMounted(async () => {
   connectionStore.listConnections().catch((err) => {
     console.error(`Failure: ${err}`);
   });
+  credentialDefinitionId.value = (
+    await sisApi.getHttp(`metadata/transcript-credential-definition-id`)
+  ).data?.transcriptCredentialDefinitionId;
 });
 </script>
 
