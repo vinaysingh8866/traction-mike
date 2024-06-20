@@ -1,5 +1,6 @@
 nameOverride: ""
 fullnameOverride: ""
+ingressSuffix: "digicred.services"
 acapy:
   image:
     repository: ghcr.io/honeymodi55/traction-plugins-acapy
