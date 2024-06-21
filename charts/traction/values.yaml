@@ -78,7 +78,7 @@ acapy:
     tails-server-upload-url: https://tails-test.vonx.io
     wallet-name: askar-wallet
     wallet-storage-type: postgres_storage
-    wallet-type: askar-profile
+    wallet-type: askar
 
   ## Acapy multiledger configuration file
   ledgers.yml:
