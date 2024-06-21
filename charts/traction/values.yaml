@@ -48,7 +48,7 @@ acapy:
     emit-new-didcomm-prefix: true
     endorser-alias: endorser
     endorser-protocol-role: author
-    genesis-transactions-list: ./scripts/ledgers.yml
+    genesis-transactions-list: /home/aries/ledgers.yml
     label: '{{ include "acapy.label" .}}'
     log-level: info
     monitor-ping: true
@@ -70,15 +70,9 @@ acapy:
     - id: bcovrin-test
       is_production: true
       is_write: true
-      genesis_url: "http://genesis.digicred.services:9000/genesis"
-      endorser_did: "QrFY3iSWx9NmDsonnuWRiT"
+      genesis_url: "http://test.bcovrin.vonx.io/genesis"
+      endorser_did: "Ket75eV5UQvVkW2XBjgDH7"
       endorser_alias: "bcovrin-test-endorser"
-    - id: bcovrin-test-1
-      is_production: true
-      is_write: true
-      genesis_url: "http://genesis.digicred.services:9000/genesis"
-      endorser_did: "hynEouwjcbk4rrWH2MVr3"
-      endorser_alias: "bcovrin-test-endorser-1"
 
   ## @section Wallet Storage configuration
   walletStorageConfig:
@@ -107,41 +101,29 @@ acapy:
   plugin-config.yml:
     multitenant_provider:
       manager:
-        class_name: "multitenant_provider.v1_0.manager.AskarMultitokenMultitenantManager"
+        class_name: multitenant_provider.v1_0.manager.AskarMultitokenMultitenantManager
         always_check_provided_wallet_key: true
       errors:
         on_unneeded_wallet_key: false
       token_expiry:
-        units: months
-        amount: 3
-
+        units: days
+        amount: 1
     traction_innkeeper:
       innkeeper_wallet:
-        tenant_id: innkeeper
         wallet_name: traction_innkeeper
-        wallet_key: change-me
-        print_key: true
-        print_token: true
+        print_key: false
+        print_token: false
         connect_to_endorser:
-          [
-            {
-              "endorser_alias": "bcovrin-test-endorser",
-              "ledger_id": "bcovrin-test",
-            },
-            {
-              "endorser_alias": "bcovrin-test-endorser-1",
-              "ledger_id": "bcovrin-test-1",
-            },
-          ]
-        create_public_did: ["bcovrin-test", "bcovrin-test-1"]
+          - endorser_alias: bcovrin-test-endorser
+            ledger_id: bcovrin-test
+        create_public_did:
+          - bcovrin-test
       reservation:
-        auto_approve: true
         expiry_minutes: 2880
-        auto_issuer: true
-
+        auto_approve: false
+        auto_issuer: false
     basicmessage_storage:
       wallet_enabled: true
-
   ## @section Acapy tails persistence configuration
   persistence:
     ## @param acapy.persistence.existingClaim Name of an existing PVC to use
