@@ -196,7 +196,7 @@ const createPayload = async () => {
     auto_remove: false,
     connection_id: formFields.selectedConnection.value,
     // TODO: Replace hardcoded credential ID with a dynamic value
-    cred_def_id: 'EYkeHjvuGtyyfMmhp2Qh9f:3:CL:99:usStateCollegeTrascript',
+    cred_def_id: 'GQWv1LhEnphyZDWW1x8Tpg:3:CL:99:studentTranscript',
     credential_preview: {
       '@type': 'issue-credential/1.0/credential-preview',
       attributes: [
