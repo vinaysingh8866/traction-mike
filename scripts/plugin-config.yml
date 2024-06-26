@@ -5,8 +5,6 @@ multitenant_provider:
   errors:
     on_unneeded_wallet_key: false
   token_expiry:
-    # units: days
-    # amount: 1
     units: months
     amount: 3
 
