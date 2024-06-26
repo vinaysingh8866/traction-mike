@@ -26,7 +26,7 @@ fi
 # ... if you want to echo the aca-py startup command ...
 # set -x
 
-export ACAPY_ENDPOINT=http://192.168.2.15:8030
+export ACAPY_ENDPOINT=http://192.168.2.109:8030
 echo "fetched end point [$ACAPY_ENDPOINT]"
 echo "Starting aca-py agent ..."
 

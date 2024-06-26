@@ -2,11 +2,11 @@
   is_production: true
   is_write: true
   genesis_url: "http://genesis.digicred.services:9000/genesis"
-  endorser_did: "QrFY3iSWx9NmDsonnuWRiT"
+  endorser_did: "FNxBsXy3TMWjMErzuy7Uje"
   endorser_alias: "bcovrin-test-endorser"
 - id: bcovrin-test-1
   is_production: true
   is_write: true
   genesis_url: "http://genesis.digicred.services:9000/genesis"
-  endorser_did: "hynEouwjcbk4rrWH2MVr3"
+  endorser_did: "EVSWQMqG5G3AwHjfy7tgUx"
   endorser_alias: "bcovrin-test-endorser-1"
