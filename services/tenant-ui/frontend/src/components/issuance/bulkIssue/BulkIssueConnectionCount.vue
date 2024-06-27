@@ -61,6 +61,7 @@ const credentialDefinitionId = ref();
 const issuerStore = useIssuerStore();
 const successful = ref<string[]>([]);
 const failed = ref<any[]>([]);
+const emits = defineEmits(['update:failedList']);
 
 // Get Metadata
 const fetchMetadata = async (connection_id: string) => {
@@ -160,8 +161,6 @@ const createPayload = async (studentInfo: any) => {
     trace: false,
   };
 };
-
-const emits = defineEmits(['update:failedList']);
 
 // Send Offer
 const sendOffer = async (payload: any, studentInfo: any) => {

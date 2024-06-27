@@ -1,7 +1,7 @@
 <template>
   <MainCardContent :title="t('bulkIssue.bulkIssue')">
     <Panel class="mb-5" header="Bulk Offer Summary">
-      <BulkIssueConnectionCount @update:failed-list="handleUpdateMyList" />
+      <BulkIssueConnectionCount @update:failed-list="handleFailedList" />
     </Panel>
     <BulkIssueFailedReport :received-list="failedList" />
   </MainCardContent>
@@ -17,7 +17,7 @@ import { ref } from 'vue';
 const { t } = useI18n();
 // Handle the emitted value and update sharedMyList
 const failedList = ref();
-const handleUpdateMyList = (val: any) => {
+const handleFailedList = (val: any) => {
   failedList.value = val;
 };
 </script>
