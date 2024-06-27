@@ -21,7 +21,10 @@
     "bulkIssue": "Bulk Issue",
     "getConnections": "Connection Count",
     "totalConnections": "Total Connections: {count}",
-    "connectionsWithStudentId": "Connections with Student ID: {count}"
+    "connectionsWithStudentId": "Connections with Student ID: {count}",
+    "reportTitle": "Bulk Issue Report",
+    "reportDescription": "This section will contain the detailed report for bulk issue operations.",
+    "failedToSend": "Failed To Send"
   },
   "transcript": {
     "transcript": "Transcript",

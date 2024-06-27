@@ -1,17 +1,15 @@
 <template>
-  <MainCardContent
-    :title="$t('bulkIssue.bulkIssue')"
-    :refresh-callback="loadTable"
-  >
-    <BulkIssueConnectionCount />
+  <MainCardContent :title="$t('bulkIssue.bulkIssue')">
+    <Panel class="mb-5" header="Connection Count">
+      <BulkIssueConnectionCount />
+    </Panel>
+    <BulkIssueReport />
   </MainCardContent>
 </template>
 
 <script setup lang="ts">
-// Import the BulkIssueConnectionCount component
+import MainCardContent from '@/components/layout/mainCard/MainCardContent.vue';
+import Panel from 'primevue/panel';
 import BulkIssueConnectionCount from '@/components/issuance/bulkIssue/BulkIssueConnectionCount.vue';
-
-const loadTable = async () => {
-  // This function can be used to trigger any additional logic needed on refresh
-};
+import BulkIssueReport from '@/components/issuance/bulkIssue/BulkIssueReport.vue';
 </script>
