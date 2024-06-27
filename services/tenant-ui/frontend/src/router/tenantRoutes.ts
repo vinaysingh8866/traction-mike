@@ -15,6 +15,8 @@ import MyInvitations from '@/views/connections/MyInvitations.vue';
 import MyIssuedCredentials from '@/views/issuance/MyIssuedCredentials.vue';
 import Schemas from '@/views/issuance/Schemas.vue';
 import CredentialDefinitions from '@/views/issuance/CredentialDefinitions.vue';
+//Bulk Issue
+import BulkIssue from '@/views/bulkIssue/BulkIssue.vue';
 // // Verifictation
 import MyPresentations from '@/views/verification/MyPresentations.vue';
 // // Holder
@@ -123,6 +125,13 @@ const tenantRoutes = [
             component: MyIssuedCredentials,
           },
         ],
+      },
+
+      // Tenant - Bulk Issue
+      {
+        path: '/bulkIssue',
+        name: 'BulkIssue',
+        component: BulkIssue,
       },
 
       // Tenant - Verifier

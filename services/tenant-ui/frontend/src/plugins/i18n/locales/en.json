@@ -600,5 +600,14 @@
     "presentationRequestBody": "Proof Request",
     "verification": "Verification",
     "verifications": "Verifications"
+  },
+
+  "bulkIssue": {
+    "bulkIssue": "Bulk Issue",
+    "totalConnections": "Total Connections: {count}",
+    "connectionsWithStudentId": "Connections With Student ID: {count}",
+    "sendOffer": "Send Offer",
+    "successfulOffers": "Successful Offers",
+    "failedOffers": "Failed Offers"
   }
 }
