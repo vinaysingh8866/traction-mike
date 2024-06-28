@@ -126,12 +126,6 @@ const tenantRoutes = [
           },
         ],
       },
-      //Tenant - Bulk Issue
-      {
-        path: 'bulkIssue',
-        name: 'BulkIssue',
-        component: BulkIssue,
-      },
 
       // Tenant - Bulk Issue
       {
