@@ -1,3 +1,4 @@
+#this file is different for m chips
 FROM python:3.10-slim-buster
 
 WORKDIR /app
