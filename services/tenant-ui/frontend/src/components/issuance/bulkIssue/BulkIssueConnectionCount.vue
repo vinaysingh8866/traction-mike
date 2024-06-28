@@ -1,35 +1,68 @@
 <template>
-  <div class="bulk-issue-connection-count">
-    <pre>{{ successful }}</pre>
-    <div class="counts">
-      <p>
-        {{ $t('bulkIssue.totalConnections', { count: connections.length }) }}
-      </p>
-      <p>
-        {{ $t('bulkIssue.connectionsWithStudentId', { count: metaDataCount }) }}
-      </p>
-      <p>
-        <Button label="send offer" icon="pi pi-send" @click="checkTranscript" />
-      </p>
-    </div>
-    <pre>{{ failed }}</pre>
+  <div class="mb-5 flex flex-column">
+    <span class="mb-2">
+      {{
+        t('bulkIssue.totalConnections', {
+          count: activeConnections?.length,
+        })
+      }}
+    </span>
+    <span>
+      {{ t('bulkIssue.connectionsWithStudentId', { count: metaDataCount }) }}
+    </span>
+  </div>
+
+  <div class="flex align-items-center">
+    <Button
+      :label="t('bulkIssue.sendOffer')"
+      icon="pi pi-send"
+      :disabled="_isActive"
+      @click="submit"
+    />
+    <span v-if="_isLoading" class="ml-2">
+      <i class="pi pi-spin pi-spinner" style="font-size: 1.2em" />
+    </span>
+  </div>
+
+  <div v-if="_isActive && !_isLoading" class="mt-5 flex flex-column font-bold">
+    <span class="mb-2">
+      {{ `${t('bulkIssue.successfulOffers')}:` }} {{ successful.length }}
+    </span>
+    <span class="mb-2">
+      {{ `${t('bulkIssue.failedOffers')}:` }} {{ failed.length }}
+    </span>
   </div>
 </template>
+
 <script setup lang="ts">
-// Vue
 import { onMounted, ref } from 'vue';
-// State
 import { useConnectionStore, useIssuerStore } from '@/store';
 import { storeToRefs } from 'pinia';
-// PrimeVue Components
 import Button from 'primevue/button';
 import useGetItem from '@/composables/useGetItem';
+import { useI18n } from 'vue-i18n';
+import { useStudentStore } from '@/store';
+import { useSisApi } from '@/store/sisApi';
 import { API_PATH } from '@/helpers/constants';
+
+const { t } = useI18n();
 const { connections } = storeToRefs(useConnectionStore());
 const connectionStore = useConnectionStore();
-// Get Metadata
+const activeConnections = ref();
 const metaStudentInfo = ref<any[]>([]);
-const metaDataCount = ref(0);
+const metaDataCount = ref<number>(0);
+const transcriptContent = ref();
+const { getStudentInfo } = useStudentStore();
+const _isLoading = ref(false);
+const _isActive = ref(false);
+const payload = ref();
+const sisApi = useSisApi();
+const credentialDefinitionId = ref();
+const issuerStore = useIssuerStore();
+const successful = ref<string[]>([]);
+const failed = ref<any[]>([]);
+
+// Get Metadata
 const fetchMetadata = async (connection_id: string) => {
   const { item, fetchItem } = useGetItem(
     API_PATH.CONNECTIONS_METADATA(connection_id)
@@ -45,12 +78,8 @@ const fetchMetadata = async (connection_id: string) => {
     });
   }
 };
-// Get Send Transcript
-import { useStudentStore } from '@/store';
-import { useSisApi } from '@/store/sisApi';
-import { useToast } from 'vue-toastification';
-const transcriptContent = ref();
-const { getStudentInfo } = useStudentStore();
+
+// Get Transcript
 const getTranscript = async (studentInfo: any) => {
   transcriptContent.value = await getStudentInfo(studentInfo.student_id);
   // There is a transcript but it's empty
@@ -58,21 +87,30 @@ const getTranscript = async (studentInfo: any) => {
     transcriptContent.value = false;
   }
   await createPayload(studentInfo);
-  await handleSubmit(payload.value);
+  await sendOffer(payload.value, studentInfo);
 };
-const checkTranscript = () => {
+
+// Submit Button
+const submit = async () => {
+  _isLoading.value = true;
+  _isActive.value = true;
   if (metaStudentInfo.value) {
-    metaStudentInfo.value.map((studentInfo: any, index: number) => {
-      getTranscript(studentInfo);
+    const promises = metaStudentInfo.value.map((studentInfo: any) => {
+      return getTranscript(studentInfo);
     });
+    Promise.all(promises)
+      .then(() => {
+        _isLoading.value = false;
+      })
+      .catch((error) => {
+        console.error('###Error fetching transcripts:', error);
+      });
   } else {
     console.log('There are no connections with metadata!');
   }
 };
+
 // Create payload
-const payload = ref();
-const sisApi = useSisApi();
-const credentialDefinitionId = ref();
 const createPayload = async (studentInfo: any) => {
   const GPA =
     transcriptContent.value?.studentCumulativeTranscript[0]?.cumulativeGradePointAverage?.toString() ??
@@ -122,22 +160,20 @@ const createPayload = async (studentInfo: any) => {
     trace: false,
   };
 };
-// Submit
-const issuerStore = useIssuerStore();
-const toast = useToast();
-const successful = ref<string[]>([]);
-const failed = ref<string[]>([]);
-// Submit function
-const handleSubmit = async (payload: any) => {
+
+const emits = defineEmits(['update:failedList']);
+
+// Send Offer
+const sendOffer = async (payload: any, studentInfo: any) => {
   try {
     await issuerStore.offerCredential(payload);
-    // toast.info('Transcript Sent');
     successful.value.push(payload.connection_id);
   } catch (error) {
-    // toast.error(`Failure: ${error}`);
-    failed.value.push(payload.connection_id);
+    failed.value.push({ studentInfo, date: new Date().toISOString() });
+    emits('update:failedList', failed.value);
   }
 };
+
 onMounted(async () => {
   credentialDefinitionId.value = (
     await sisApi.getHttp(`metadata/transcript-credential-definition-id`)
@@ -145,23 +181,12 @@ onMounted(async () => {
   await connectionStore.listConnections().catch((err) => {
     console.error(`Failure: ${err}`);
   });
-  const fetchAllMetadata = connections.value.map((connection: any) => {
+  activeConnections.value = connections.value.filter(
+    (connection: any) => connection.state === 'active'
+  );
+  const fetchAllMetadata = activeConnections.value.map((connection: any) => {
     fetchMetadata(connection?.connection_id);
   });
   await Promise.all(fetchAllMetadata);
 });
 </script>
-<style scoped>
-.bulk-issue-connection-count {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-}
-.counts {
-  margin-bottom: 1rem;
-  text-align: center;
-}
-</style>

@@ -133,6 +133,13 @@ const tenantRoutes = [
         component: BulkIssue,
       },
 
+      // Tenant - Bulk Issue
+      {
+        path: '/bulkIssue',
+        name: 'BulkIssue',
+        component: BulkIssue,
+      },
+
       // Tenant - Verifier
       {
         path: '/verification/',

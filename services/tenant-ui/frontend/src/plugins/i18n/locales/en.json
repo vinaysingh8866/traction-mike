@@ -19,12 +19,11 @@
   },
   "bulkIssue": {
     "bulkIssue": "Bulk Issue",
-    "getConnections": "Connection Count",
     "totalConnections": "Total Connections: {count}",
-    "connectionsWithStudentId": "Connections with Student ID: {count}",
-    "reportTitle": "Bulk Issue Report",
-    "reportDescription": "This section will contain the detailed report for bulk issue operations.",
-    "failedToSend": "Failed To Send"
+    "connectionsWithStudentId": "Connections With Student ID: {count}",
+    "sendOffer": "Send Offer",
+    "successfulOffers": "Successful Offers",
+    "failedOffers": "Failed Offers"
   },
   "transcript": {
     "transcript": "Transcript",
