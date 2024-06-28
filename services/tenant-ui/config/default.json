@@ -1,7 +1,7 @@
 {
   "frontend": {
-    "tenantProxyPath": "http://192.168.2.15:8032",
-    "sisProxyPath": "http://192.168.2.15:3008",
+    "tenantProxyPath": "http://crms.digicred.services:8032",
+    "sisProxyPath": "http://controllers.digicred.services:3008",
     "apiPath": "api/",
     "basePath": "/",
     "showDeveloper": true,
@@ -54,7 +54,7 @@
     "logLevel": "http",
     "port": "8080",
     "staticFiles": "../../frontend/dist",
-    "tractionUrl": "http://localhost:5173",
+    "tractionUrl": "http://crms.digicred.services:5100",
     "oidc": {
       "jwksUri": "https://dev.loginproxy.gov.bc.ca/auth/realms/digitaltrust-citz/protocol/openid-connect/certs",
       "realm": "digitaltrust-citz",
