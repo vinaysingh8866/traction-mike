@@ -36,7 +36,7 @@
 import { ref } from 'vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import { TABLE_OPT, API_PATH } from '@/helpers/constants';
+import { TABLE_OPT } from '@/helpers/constants';
 import { FilterMatchMode } from 'primevue/api';
 import { formatDateLong } from '@/helpers';
 
