@@ -75,6 +75,7 @@ const fetchMetadata = async (connection_id: string) => {
       first_name: item.value.results.first_name,
       last_name: item.value.results.last_name,
       student_id: item.value.results.student_id,
+      expiration: item.value.results.expiration,
       connection_id,
     });
   }
@@ -162,13 +163,35 @@ const createPayload = async (studentInfo: any) => {
   };
 };
 
-// Send Offer
+// Helper function to check if the expiration date is valid
+const isExpired = (expiration: string): boolean => {
+  const expirationDate = new Date(
+    `${expiration.substring(0, 4)}-${expiration.substring(4, 6)}-${expiration.substring(6, 8)}`
+  );
+  const today = new Date();
+  return expirationDate < today;
+};
+
 const sendOffer = async (payload: any, studentInfo: any) => {
   try {
+    if (isExpired(studentInfo?.expiration)) {
+      throw new Error('Expired');
+    }
     await issuerStore.offerCredential(payload);
     successful.value.push(payload.connection_id);
   } catch (error) {
-    failed.value.push({ studentInfo, date: new Date().toISOString() });
+    let reason = 'Unknown error';
+    // Add other specific failure reasons here as needed
+    if (error instanceof Error && error.message === 'Expired') {
+      reason = 'Student ID Expired';
+    }
+    if (
+      error instanceof Error &&
+      error.message === 'Request failed with status code 422'
+    ) {
+      reason = 'Student ID Not Found';
+    }
+    failed.value.push({ studentInfo, date: new Date().toISOString(), reason });
     emits('update:failedList', failed.value);
   }
 };

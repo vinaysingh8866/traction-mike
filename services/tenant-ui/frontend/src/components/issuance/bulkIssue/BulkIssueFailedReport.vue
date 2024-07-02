@@ -29,6 +29,7 @@
         }}</template
       >
     </Column>
+    <Column field="reason" header="Reason" />
   </DataTable>
 </template>
 
