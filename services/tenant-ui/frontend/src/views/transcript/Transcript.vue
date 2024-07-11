@@ -66,7 +66,9 @@
             v-if="transcriptContent && !transcriptLoading"
             class="pt-4 transcriptContent"
           >
-            <Card>
+            <!-- TODO: 'v-html' directive can lead to XSS attack. -->
+            <div class="taa-html mb-4" v-html="svg?.data" />
+            <!-- <Card>
               <template #content>
                 <div>
                   <strong>{{ `${$t('transcript.studentID')}: ` }}</strong>
@@ -96,7 +98,7 @@
                   />
                 </div>
               </template>
-            </Card>
+            </Card> -->
           </div>
 
           <Button
@@ -223,6 +225,7 @@ const getTranscript = async (student_id: string) => {
 const payload = ref();
 const sisApi = useSisApi();
 const credentialDefinitionId = ref();
+const svg = ref();
 // Create payload
 const createPayload = async () => {
   const GPA =
@@ -330,6 +333,7 @@ onMounted(async () => {
   credentialDefinitionId.value = (
     await sisApi.getHttp(`metadata/transcript-credential-definition-id`)
   ).data?.transcriptCredentialDefinitionId;
+  svg.value = await sisApi.getHttp(`svg/generate`);
 });
 </script>
 
