@@ -174,25 +174,6 @@ const initializeSocket = () => {
       contactAdded.value = true;
       console.log(`Student ${data.details.alias} successfully added!`);
       console.log('Issuing student ID....');
-      try {
-        const payload = {
-          auto_issue: true,
-          auto_remove: false,
-          connection_id: `${data.details.connection_id}`,
-          cred_def_id: `${data.cred_def_id}`,
-          credential_preview: {
-            '@type': 'issue-credential/1.0/credential-preview',
-            attributes: JSON.parse(JSON.stringify(data.attributes)),
-          },
-          trace: false,
-        };
-
-        await issuerStore.offerCredential(payload);
-        credentialOffered.value = true;
-        toast.info('Credential Offer Sent');
-      } catch (error) {
-        toast.error(`Failure: ${error}`);
-      }
     }
 
     if (data.details?.state === 'offer_sent') {
