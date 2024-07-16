@@ -123,6 +123,7 @@ import {
 } from '@/store';
 import { useToast } from 'vue-toastification';
 import { storeToRefs } from 'pinia';
+import { useTenantStore } from '@/store';
 
 const { t } = useI18n();
 const studentId = ref('');
@@ -144,6 +145,7 @@ const qrCodeScanned = ref(false);
 const contactAdded = ref(false);
 const credentialIssued = ref(false);
 const credentialOffered = ref(false);
+const webHookUrl = ref(null);
 
 let socket: any;
 
@@ -187,7 +189,20 @@ const initializeSocket = () => {
 
 onMounted(() => {
   initializeSocket();
+  loadTenantSettings();
 });
+const { tenantWallet } = storeToRefs(useTenantStore());
+const tenantStore = useTenantStore();
+const loadTenantSettings = async () => {
+  Promise.all([tenantStore.getTenantSubWallet()])
+    .then(() => {
+      webHookUrl.value = tenantWallet.value.settings['wallet.webhook_urls'][0];
+    })
+    .catch((err: any) => {
+      console.error(err);
+      toast.error(`Failure: ${err}`);
+    });
+};
 
 onUnmounted(() => {
   if (socket) {
@@ -231,7 +246,11 @@ const handleIdLookUp = async () => {
   studentFullName.value = false;
   loading.value = true;
   try {
-    response = await idLookup(studentId.value);
+    if (webHookUrl.value) {
+      response = await idLookup(studentId.value, webHookUrl.value);
+    } else {
+      response = await idLookup(studentId.value);
+    }
     if (response && response.studentIdCred) {
       console.log('response', response);
       fullName.value = response.studentIdCred.fullName;
