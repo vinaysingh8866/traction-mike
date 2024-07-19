@@ -133,6 +133,7 @@ import useGetItem from '@/composables/useGetItem';
 import { API_PATH } from '@/helpers/constants';
 import { useToast } from 'vue-toastification';
 import { useSisApi } from '@/store/sisApi';
+import { useTenantStore } from '@/store';
 
 const { getStudentInfo, idLookup } = useStudentStore();
 
@@ -192,21 +193,52 @@ const fetchMetadata = async (connection_id: string) => {
   metaDataLoading.value = false;
 };
 
+// Get webHookUrl
+const { tenantWallet } = storeToRefs(useTenantStore());
+const tenantStore = useTenantStore();
+const webHookUrl = ref(null);
+const loadTenantSettings = async () => {
+  Promise.all([tenantStore.getTenantSubWallet()])
+    .then(() => {
+      webHookUrl.value = tenantWallet.value.settings['wallet.webhook_urls'][0];
+    })
+    .catch((err: any) => {
+      console.error(err);
+      toast.error(`Failure: ${err}`);
+    });
+};
+
 // Transcript
 const transcriptLoading = ref(false);
 const transcriptContent = ref();
 // Get transcript
 const getTranscript = async (student_id: string) => {
   transcriptLoading.value = true;
-  (await getStudentInfo(student_id))
-    ? (transcriptContent.value = await getStudentInfo(student_id))
-    : (transcriptContent.value = false);
+  if (webHookUrl.value) {
+    (await getStudentInfo(student_id, webHookUrl.value))
+      ? (transcriptContent.value = await getStudentInfo(
+          student_id,
+          webHookUrl.value
+        ))
+      : (transcriptContent.value = false);
+  } else {
+    (await getStudentInfo(student_id))
+      ? (transcriptContent.value = await getStudentInfo(student_id))
+      : (transcriptContent.value = false);
+  }
+
   // There is a transcript but it's empty
   if (transcriptContent.value?.courseTranscript?.length === 0) {
     transcriptContent.value = false;
   }
   if (isMetaData.value === false && transcriptContent.value) {
-    const studentInfo = await idLookup(student_id);
+    let studentInfo;
+    if (webHookUrl.value) {
+      studentInfo = await idLookup(student_id, webHookUrl.value);
+    } else {
+      studentInfo = await idLookup(student_id);
+    }
+
     if (studentInfo) {
       metadataMap.value = {
         results: {
@@ -334,6 +366,7 @@ onMounted(async () => {
     await sisApi.getHttp(`metadata/transcript-credential-definition-id`)
   ).data?.transcriptCredentialDefinitionId;
   svg.value = await sisApi.getHttp(`svg/generate`);
+  loadTenantSettings();
 });
 </script>
 
