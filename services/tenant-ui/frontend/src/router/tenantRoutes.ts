@@ -29,6 +29,8 @@ import Oca from '@/views/oca/Oca.vue';
 import ApiKeys from '@/views/ApiKeys.vue';
 // Const
 import { RESERVATION_STATUS_ROUTE } from '@/helpers/constants';
+// Tablet
+import OnboardingTablet from '@/views/OnboardingTablet.vue';
 
 const tenantRoutes = [
   // Tenant Routes (base / is Tenant side for this app)
@@ -45,6 +47,7 @@ const tenantRoutes = [
         name: 'onboarding',
         component: Onboarding,
       },
+
       // About
       {
         path: '/transcript',
@@ -183,6 +186,12 @@ const tenantRoutes = [
     path: `/${RESERVATION_STATUS_ROUTE}`,
     name: 'TenantUiReservationStatus',
     component: TenantUi,
+  },
+  // Onboarding Tablet
+  {
+    path: '/onboardingTablet',
+    name: 'onboardingTablet',
+    component: OnboardingTablet,
   },
 ];
 
