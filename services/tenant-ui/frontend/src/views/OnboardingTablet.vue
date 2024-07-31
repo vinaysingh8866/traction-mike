@@ -1,81 +1,99 @@
 <template>
-  <div class="onboarding-tablet">
-    <section>
-      <form class="onboarding-form">
-        <InputText
-          id="studentId"
-          v-model="studentId"
-          required
-          placeholder="Student ID"
-          :class="errorSt ? 'errorSt' : ''"
-        />
-        <Button icon="pi pi-search" class="searchBtn" @click="handleIdLookUp" />
-        <Card v-if="studentInfo" class="mt-4">
-          <template #title>
-            <div class="flex align-items-center">
-              <img
-                src="/tablet/capefearlogo.jpg"
-                alt=""
-                class="capefearlogo mr-2"
-              />
-              <span> {{ $t('Cape Fear Student ID') }}</span>
-            </div>
-          </template>
-          <template #content>
-            <div class="flex justify-content-between">
-              <div>
-                <p class="m-0 font-bold">
-                  {{ studentInfo.fullName }}
-                </p>
-                <p class="my-2">
-                  {{ $t('Student ID:') }} {{ studentInfo.studentsId }}
-                </p>
-                <p class="mt-0">{{ $t('Expiration: 2025/07/01') }}</p>
-              </div>
-              <div>
-                <Button
-                  v-if="invitation_url"
-                  icon="pi pi-refresh"
-                  class="btnArrow"
-                  @click="refresh"
+  <div class="main-container">
+    <div class="onboarding-tablet">
+      <section>
+        <form class="onboarding-form" @submit.prevent>
+          <InputText
+            id="studentId"
+            v-model="studentId"
+            required
+            placeholder="Student ID"
+            :class="errorSt ? 'errorSt' : ''"
+          />
+
+          <Button
+            :icon="!loadingSt ? 'pi pi-search' : 'pi pi-spin pi-spinner'"
+            class="searchBtn"
+            @click="handleIdLookUp"
+          />
+          <Card v-if="studentInfo" class="mt-4">
+            <template #title>
+              <div class="flex align-items-center">
+                <img
+                  src="/tablet/capefearlogo.jpg"
+                  alt=""
+                  class="capefearlogo mr-2"
                 />
-                <Button
-                  v-else
-                  icon="pi pi-arrow-circle-right"
-                  class="btnArrow"
-                  @click="generateQRcode"
-                />
+                <span> {{ $t('Cape Fear Student ID') }}</span>
               </div>
-            </div>
-          </template>
-        </Card>
-        <Card v-if="errorSt" class="mt-4">
-          <template #content>
-            <p>{{ $t('No matching student IDs.') }}</p>
-          </template>
-        </Card>
-      </form>
-      <div v-if="invitation_url" class="qrCode">
-        <QRCode :qr-content="invitation_url" />
-      </div>
-    </section>
+            </template>
+            <template #content>
+              <div class="flex justify-content-between">
+                <div>
+                  <p class="m-0 font-bold">
+                    {{ studentInfo.fullName }}
+                  </p>
+                  <p class="my-2">
+                    {{ $t('Student ID:') }} {{ studentInfo.studentsId }}
+                  </p>
+                  <p class="mt-0">{{ $t('Expiration: 2025/07/01') }}</p>
+                </div>
+                <div>
+                  <Button
+                    v-if="invitation_url"
+                    icon="pi pi-refresh"
+                    class="btnArrow"
+                    @click="refresh"
+                  />
+                  <Button
+                    v-else
+                    :icon="
+                      !loadingQrCode
+                        ? 'pi pi-arrow-circle-right'
+                        : 'pi pi-spin pi-spinner'
+                    "
+                    class="btnArrow"
+                    @click="generateQRcode"
+                  />
+                </div>
+              </div>
+            </template>
+          </Card>
+          <Card v-if="errorSt" class="mt-4">
+            <template #content>
+              <p>{{ $t('No matching student IDs.') }}</p>
+            </template>
+          </Card>
+        </form>
+        <div v-if="invitation_url" class="qrCode">
+          <QRCode :qr-content="invitation_url" />
+        </div>
+      </section>
+    </div>
+    <footer class="flex align-center justify-content-end px-8">
+      <img src="/tablet/digicred-dark.svg" alt="" />
+    </footer>
   </div>
-  <footer class="flex align-center justify-content-end px-8">
-    <img src="/tablet/digicred-dark.svg" alt="" />
-  </footer>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import QRCode from '@/components/common/QRCode.vue';
-import { useStudentStore, useConnectionStore } from '@/store';
+import {
+  useStudentStore,
+  useConnectionStore,
+  useTokenStore,
+  useConfigStore,
+} from '@/store';
+import { storeToRefs } from 'pinia';
 
 const studentId = ref('');
 const studentInfo: any = ref('');
 const loadingSt = ref(false);
+const loadingQrCode = ref(false);
 const errorSt = ref(false);
 const webHookUrl = ref(null);
 const invitation_url = ref('');
@@ -97,16 +115,17 @@ const handleIdLookUp = async () => {
     }
     if (response && response.studentIdCred) {
       studentInfo.value = response.studentIdCred;
-      loadingSt.value = false;
     } else {
       errorSt.value = true;
     }
   } catch (err: any) {
     errorSt.value = true;
   }
+  loadingSt.value = false;
 };
 
 const generateQRcode = async () => {
+  loadingQrCode.value = true;
   try {
     const result: any = await createInvitation(
       `${studentInfo.value.fullName.value} -studentID- ${studentId.value}`,
@@ -119,6 +138,7 @@ const generateQRcode = async () => {
   } catch (err: any) {
     console.error('Error during invitation creation:', err.message);
   }
+  loadingQrCode.value = false;
 };
 const refresh = async () => {
   studentId.value = '';
@@ -127,11 +147,29 @@ const refresh = async () => {
   errorSt.value = false;
   invitation_url.value = '';
 };
+
+/* hardcode login cape fear */
+const tokenStore = useTokenStore();
+const { config } = storeToRefs(useConfigStore());
+onMounted(async () => {
+  const walletIdCapeFear =
+    config.value?.frontend?.walletIdOnboardingTabletCapeFear;
+  const walletKeyCapeFear =
+    config.value?.frontend?.walletKeyOnboardingTabletCapeFear;
+  await tokenStore.login(walletIdCapeFear, walletKeyCapeFear, false);
+});
 </script>
 
 <style scoped>
+.main-container {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+}
 .onboarding-tablet {
-  min-height: calc(100vh - 80px);
+  min-height: calc(100% - 80px);
+  height: calc(100% - 80px);
   background-color: antiquewhite;
   padding: 40px;
   display: flex;
