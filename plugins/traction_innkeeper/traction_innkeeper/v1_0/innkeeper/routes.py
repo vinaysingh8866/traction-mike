@@ -2,7 +2,7 @@ import functools
 import logging
 import uuid
 
-from aiohttp import ClientSession, web
+from aiohttp import web
 from aiohttp_apispec import (
     docs,
     match_info_schema,
@@ -10,41 +10,42 @@ from aiohttp_apispec import (
     response_schema,
     use_kwargs,
 )
-from aries_cloudagent.admin.request_context import AdminRequestContext
-from aries_cloudagent.admin.server import AdminConfigSchema
-from aries_cloudagent.messaging.models.base import BaseModelError
-from aries_cloudagent.messaging.models.openapi import OpenAPISchema
-from aries_cloudagent.messaging.valid import JSONWebToken, UUIDFour
-from aries_cloudagent.multitenant.admin.routes import (
+from acapy_agent.admin.request_context import AdminRequestContext
+from acapy_agent.admin.routes import AdminConfigSchema
+from acapy_agent.messaging.models.base import BaseModelError
+from acapy_agent.messaging.models.openapi import OpenAPISchema
+from acapy_agent.messaging.valid import JSONWebToken, UUIDFour
+from acapy_agent.multitenant.admin.routes import (
     CreateWalletTokenRequestSchema,
     CreateWalletTokenResponseSchema,
 )
-from aries_cloudagent.multitenant.base import BaseMultitenantManager
-from aries_cloudagent.multitenant.error import WalletKeyMissingError
-from aries_cloudagent.storage.error import StorageError, StorageNotFoundError
-from aries_cloudagent.version import __version__
-from aries_cloudagent.wallet.error import WalletSettingsError
-from aries_cloudagent.wallet.models.wallet_record import WalletRecord
+from acapy_agent.multitenant.base import BaseMultitenantManager
+from acapy_agent.multitenant.error import WalletKeyMissingError
+from acapy_agent.storage.error import StorageError, StorageNotFoundError
+from acapy_agent.version import __version__
+from acapy_agent.wallet.error import WalletSettingsError
+from acapy_agent.wallet.models.wallet_record import WalletRecord
+from multitenant_provider.v1_0.routes import plugin_wallet_create_token
 from marshmallow import fields, validate
 
 from . import TenantManager
 from .config import InnkeeperWalletConfig
+from .models import (
+    ReservationRecord,
+    ReservationRecordSchema,
+    TenantAuthenticationApiRecord,
+    TenantAuthenticationApiRecordSchema,
+    TenantRecord,
+    TenantRecordSchema,
+)
 from .utils import (
-    approve_reservation,
-    refresh_registration_token,
-    create_api_key,
     EndorserLedgerConfigSchema,
     ReservationException,
     TenantApiKeyException,
     TenantConfigSchema,
-)
-from .models import (
-    ReservationRecord,
-    ReservationRecordSchema,
-    TenantRecord,
-    TenantRecordSchema,
-    TenantAuthenticationApiRecord,
-    TenantAuthenticationApiRecordSchema,
+    approve_reservation,
+    create_api_key,
+    refresh_registration_token,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -523,6 +524,30 @@ async def tenant_create_token(request: web.BaseRequest):
 
 
 @docs(
+    tags=["multitenancy"],
+    summary="Get auth token for a subwallet (innkeeper plugin override)",
+)
+@request_schema(CreateWalletTokenRequestSchema)
+@response_schema(CreateWalletTokenResponseSchema(), 200, description="")
+@error_handler
+async def tenant_wallet_create_token(request: web.BaseRequest):
+    context: AdminRequestContext = request["context"]
+    wallet_id = request.match_info["wallet_id"]
+
+    mgr = context.inject(TenantManager)
+    profile = mgr.profile
+
+    # Tenants must always be fetch by their wallet id.
+    async with profile.session() as session:
+        rec = await TenantRecord.query_by_wallet_id(session, wallet_id)
+        LOGGER.debug("when creating token ", rec)
+        if rec.state == TenantRecord.STATE_DELETED:
+            raise web.HTTPUnauthorized(reason="Tenant is disabled")
+
+    return await plugin_wallet_create_token(request)
+
+
+@docs(
     tags=[SWAGGER_CATEGORY],
 )
 @request_schema(ReservationRequestSchema())
@@ -809,7 +834,35 @@ async def innkeeper_tenant_delete(request: web.BaseRequest):
             return web.json_response({"success": f"Tenant {tenant_id} soft deleted."})
         else:
             raise web.HTTPNotFound(reason=f"Tenant {tenant_id} not found.")
-    
+
+
+@docs(
+    tags=[SWAGGER_CATEGORY],
+)
+@match_info_schema(TenantIdMatchInfoSchema())
+@response_schema(TenantRecordSchema(), 200, description="")
+@innkeeper_only
+@error_handler
+async def innkeeper_tenant_hard_delete(request: web.BaseRequest):
+    context: AdminRequestContext = request["context"]
+    tenant_id = request.match_info["tenant_id"]
+
+    mgr = context.inject(TenantManager)
+    profile = mgr.profile
+    async with profile.session() as session:
+        rec = await TenantRecord.retrieve_by_id(session, tenant_id)
+        if rec:
+            multitenant_mgr = context.profile.inject(BaseMultitenantManager)
+            wallet_id = rec.wallet_id
+            wallet_record = await WalletRecord.retrieve_by_id(session, wallet_id)
+
+            await multitenant_mgr.remove_wallet(wallet_id)
+            await rec.delete_record(session)
+            LOGGER.info("Tenant %s rd deleted.", tenant_id)
+            return web.json_response({"success": f"Tenant {tenant_id} hard deleted."})
+        else:
+            raise web.HTTPNotFound(reason=f"Tenant {tenant_id} not found.")
+
 
 @docs(
     tags=[SWAGGER_CATEGORY],
@@ -822,10 +875,10 @@ async def innkeeper_tenant_delete(request: web.BaseRequest):
 async def innkeeper_tenant_restore(request: web.BaseRequest):
     context: AdminRequestContext = request["context"]
     tenant_id = request.match_info["tenant_id"]
-    
+
     mgr = context.inject(TenantManager)
     profile = mgr.profile
-    
+
     async with profile.session() as session:
         rec = await TenantRecord.retrieve_by_id(session, tenant_id)
         if rec:
@@ -837,7 +890,7 @@ async def innkeeper_tenant_restore(request: web.BaseRequest):
                 return web.json_response({"success": f"Tenant {tenant_id} restored."})
         else:
             raise web.HTTPNotFound(reason=f"Tenant {tenant_id} not found.")
- 
+
 
 @docs(tags=[SWAGGER_CATEGORY], summary="Create API Key Record")
 @request_schema(TenantAuthenticationsApiRequestSchema())
@@ -852,7 +905,6 @@ async def innkeeper_authentications_api(request: web.BaseRequest):
 
     # keys are under base/root profile, use Tenant Manager profile
     mgr = context.inject(TenantManager)
-    profile = mgr.profile
 
     try:
         api_key, tenant_authentication_api_id = await create_api_key(rec, mgr)
@@ -960,9 +1012,7 @@ async def innkeeper_config_handler(request: web.BaseRequest):
     profile = mgr.profile
 
     config = {
-        key: (
-           profile.context.settings[key]
-        )
+        key: (profile.context.settings[key])
         for key in profile.context.settings
         if key
         not in [
@@ -975,9 +1025,13 @@ async def innkeeper_config_handler(request: web.BaseRequest):
         ]
     }
     try:
-      del config["plugin_config"]["traction_innkeeper"]["innkeeper_wallet"]["wallet_key"]
+        del config["plugin_config"]["traction_innkeeper"]["innkeeper_wallet"][
+            "wallet_key"
+        ]
     except KeyError as e:
-      LOGGER.warn(f"The key to be removed: '{e.args[0]}' is missing from the dictionary.")
+        LOGGER.warn(
+            f"The key to be removed: '{e.args[0]}' is missing from the dictionary."
+        )
     config["version"] = __version__
 
     return web.json_response({"config": config})
@@ -999,8 +1053,26 @@ async def register(app: web.Application):
                 "/multitenancy/reservations/{reservation_id}/check-in", tenant_checkin
             ),
             web.post("/multitenancy/tenant/{tenant_id}/token", tenant_create_token),
+            web.post(
+                "/multitenancy/wallet/{wallet_id}/token", tenant_wallet_create_token
+            ),
         ]
     )
+    # Find the endpoint for token creation that already exists and
+    # override it
+    for r in app.router.routes():
+        if r.method == "POST":
+            if (
+                r.resource
+                and r.resource.canonical == "/multitenancy/wallet/{wallet_id}/token"
+            ):
+                LOGGER.info(
+                    f"found route: {r.method} {r.resource.canonical} ({r.handler})"
+                )
+                LOGGER.info(f"... replacing current handler: {r.handler}")
+                r._handler = tenant_wallet_create_token
+                LOGGER.info(f"... with new handler: {r.handler}")
+                has_wallet_create_token = True
     # routes that require a tenant token for the innkeeper wallet/tenant/agent.
     # these require not only a tenant, but it has to be the innkeeper tenant!
     app.add_routes(
@@ -1033,6 +1105,9 @@ async def register(app: web.Application):
             ),
             web.put("/innkeeper/tenants/{tenant_id}/config", tenant_config_update),
             web.delete("/innkeeper/tenants/{tenant_id}", innkeeper_tenant_delete),
+            web.delete(
+                "/innkeeper/tenants/{tenant_id}/hard", innkeeper_tenant_hard_delete
+            ),
             web.put("/innkeeper/tenants/{tenant_id}/restore", innkeeper_tenant_restore),
             web.get(
                 "/innkeeper/default-config",

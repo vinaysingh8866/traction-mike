@@ -1,7 +1,4 @@
-# Use a Debian-based Node.js image
-FROM --platform=$BUILDPLATFORM node:18-buster
-
-# Set the working directory in the container
+FROM --platform=$BUILDPLATFORM node:22-alpine
 WORKDIR /usr/src/app
 
 # Copy all files from the current directory to the container

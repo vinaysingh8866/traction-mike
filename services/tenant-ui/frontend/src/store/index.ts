@@ -1,4 +1,5 @@
 export { useConfigStore } from './configStore';
+
 // Tenant
 export { useConnectionStore } from './connectionStore';
 export { useStudentStore } from './studentStore';
@@ -19,3 +20,6 @@ export { useInnkeeperOidcStore } from './innkeeper/innkeeperOidcStore';
 
 // OIDC
 export { useOidcStore } from './oidc/oidcStore';
+
+// Log
+export { useLogStore } from './logStore';

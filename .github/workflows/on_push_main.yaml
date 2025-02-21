@@ -1,4 +1,4 @@
-name: Build & Deploy Development
+name: Build, Update Config, and Deploy Development
 on:
   workflow_dispatch:
   push:
@@ -69,7 +69,7 @@ jobs:
       image_tag: ${{ steps.builder.outputs.image_tag }}
       image_version: ${{ steps.builder.outputs.image_version }}
 
-  deploy:
+  deploy_dev:
     name: Deploy Dev
     environment: development
     runs-on: ubuntu-latest
@@ -77,10 +77,23 @@ jobs:
       - build_ui
       - build_acapy
       - build_proxy
-    if: ${{ always() && contains(needs.*.result, 'success') && !(contains(needs.*.result, 'failure')) && (github.repository_owner == 'bcgov') }}
-
+    if: ${{ contains(needs.*.result, 'success') && !(contains(needs.*.result, 'failure')) && (github.repository_owner == 'bcgov') }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Checkout services directory from the trust-over-ip-configurations repo
+        uses: actions/checkout@v4
+        with:
+          repository: bcgov/trust-over-ip-configurations
+          ssh-key: ${{ secrets.DITP_CONFIGS_REPO_SECRET }}
+          sparse-checkout: |
+            services
+          path: trust-over-ip-configurations
+
+      - name: Install OpenShift CLI tools
+        uses: redhat-actions/openshift-tools-installer@v1
+        with:
+          oc: "4.14"
 
       - name: Authenticate and set context
         uses: redhat-actions/oc-login@v1
@@ -90,9 +103,11 @@ jobs:
           certificate_authority_data: ${{ secrets.OPENSHIFT_CA_CRT }}
           namespace: ${{ secrets.OPENSHIFT_NAMESPACE }}
 
-      - name: Traction Dev Helm
+      - name: Deploy Traction to Development
         run: |
-          helm upgrade --install traction -f ./deploy/traction/values-development.yaml --set acapy.image.tag=${{ needs.build_acapy.outputs.image_version }} --set tenant_proxy.image.tag=${{ needs.build_acapy.outputs.image_version }} --set ui.image.tag=${{ needs.build_ui.outputs.image_version }} ./charts/traction --wait
+          cp trust-over-ip-configurations/services/traction/charts/dev/values.yaml ./dev-values.yaml
+          yq e -i 'del(.traction) | . *= load("trust-over-ip-configurations/services/traction/charts/dev/values.yaml").traction' ./dev-values.yaml
+          helm upgrade --install traction -f ./dev-values.yaml --set acapy.image.tag=${{ needs.build_acapy.outputs.image_version }} --set tenant_proxy.image.tag=${{ needs.build_acapy.outputs.image_version }} --set ui.image.tag=${{ needs.build_ui.outputs.image_version }} ./charts/traction --wait
 
       - name: Restart Deployments
         run: |

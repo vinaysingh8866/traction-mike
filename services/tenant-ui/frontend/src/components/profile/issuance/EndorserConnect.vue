@@ -15,17 +15,6 @@
       text
       @click="switchLedger($event)"
     />
-    <!-- <Button
-      title="Connect to endorser"
-      icon="pi pi-user-plus"
-      class="p-button-rounded p-button-icon-only p-button-text"
-      @click="
-        connectToLedger(
-          props.ledgerInfo.endorser_alias,
-          props.ledgerInfo.ledger_id
-        )
-      "
-    /> -->
   </div>
 
   <div
@@ -122,7 +111,7 @@ const registerPublicDid = async () => {
     await tenantStore.registerPublicDid();
     toast.success('Public DID registration sent');
   } catch (error) {
-    throw Error(`Failure while registering: ${error}`);
+    toast.error(`Failure while registering: ${error}`);
   }
 };
 

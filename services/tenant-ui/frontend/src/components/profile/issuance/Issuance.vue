@@ -22,7 +22,7 @@
     </p>
   </div>
   <div v-else>
-    <h5 class="mb-0 mt-3">{{ $t('common.endorser') }}</h5>
+    <h5 class="mb-0 mt-3">{{ $t('common.ledgers') }}</h5>
     <div v-if="endorserInfo">
       <Endorser />
 
@@ -68,7 +68,12 @@ const {
 const errLoading = ref(false);
 const loadIssuer = async () => {
   try {
-    await tenantStore.getIssuanceStatus();
+    await Promise.all([
+      tenantStore.getServerConfig(),
+      tenantStore.getIssuanceStatus(),
+      tenantStore.getWalletcDids(),
+      tenantStore.getTransactions(),
+    ]);
   } catch (error) {
     errLoading.value = true;
     toast.error(`Failure getting Issuer info: ${error}`);

@@ -60,6 +60,7 @@ export const API_PATH = {
   INNKEEPER_TOKEN: '/innkeeper/token',
   INNKEEPER_TENANTS: '/innkeeper/tenants/',
   INNKEEPER_TENANT: (id: string) => `/innkeeper/tenants/${id}`,
+  INNKEEPER_HARD_DELETE_TENANT: (id: string) => `/innkeeper/tenants/${id}/hard`,
   INNKEEPER_TENANT_CONFIG: (id: string) => `/innkeeper/tenants/${id}/config`,
   INNKEEPER_TENANT_DEFAULT_CONFIG: '/innkeeper/default-config',
   INNKEEPER_TENANT_RESTORE: (id: string) => `/innkeeper/tenants/${id}/restore`,
@@ -77,11 +78,20 @@ export const API_PATH = {
   ISSUE_CREDENTIAL_RECORD: (id: string) => `/issue-credential/records/${id}`,
   ISSUE_CREDENTIAL_RECORDS_SEND_OFFER: (id: string) =>
     `/issue-credential/records/${id}/send-offer`,
-  ISSUE_CREDENTIALS_SEND_OFFER: '/issue-credential/send-offer',
+  ISSUE_CREDENTIALS_SEND_OFFER: '/issue-credential-2.0/send-offer',
   ISSUE_CREDENTIAL_RECORDS_SEND_REQUEST: (id: string) =>
     `/issue-credential/records/${id}/send-request`,
   ISSUE_CREDENTIAL_RECORDS_PROBLEM_REPORT: (id: string) =>
     `/issue-credential/records/${id}/problem-report`,
+
+  ISSUE_CREDENTIAL_20_RECORDS: '/issue-credential-2.0/records',
+  ISSUE_CREDENTIAL_20_RECORD: (id: string) =>
+    `/issue-credential-2.0/records/${id}`,
+  ISSUE_CREDENTIALS_20_SEND_OFFER: '/issue-credential-2.0/send-offer',
+  ISSUE_CREDENTIAL_20_RECORDS_SEND_REQUEST: (id: string) =>
+    `/issue-credential-2.0/records/${id}/send-request`,
+  ISSUE_CREDENTIAL_20_RECORDS_PROBLEM_REPORT: (id: string) =>
+    `/issue-credential-2.0/records/${id}/problem-report`,
 
   LEDGER_TAA: '/ledger/taa',
   LEDGER_TAA_ACCEPT: '/ledger/taa/accept',
@@ -118,6 +128,10 @@ export const API_PATH = {
   PRESENT_PROOF_SEND_PROPOSAL: '/present-proof/send-proposal',
   PRESENT_PROOF_SEND_REQUEST: '/present-proof/send-request',
 
+  PRESENT_PROOF_20_RECORDS: '/present-proof-2.0/records',
+  PRESENT_PROOF_20_RECORD: (id: string) => `/present-proof-2.0/records/${id}`,
+  PRESENT_PROOF_20_SEND_REQUEST: '/present-proof-2.0/send-request',
+
   REVOCATION_REVOKE: '/revocation/revoke',
 
   SCHEMAS: '/schemas',
@@ -137,6 +151,8 @@ export const API_PATH = {
   SIS_STUDENT_ID: '/sis/student-id',
 
   TENANT_SELF: '/tenant',
+  TENANT_DELETE: '/tenant/hard',
+  TENANT_DELETE_SOFT: '/tenant/soft',
   TENANT_ENDORSER_CONNECTION: '/tenant/endorser-connection',
   TENANT_ENDORSER_INFO: '/tenant/endorser-info',
   TENANT_REGISTER_PUBLIC_DID: '/ledger/register-nym',
@@ -157,6 +173,9 @@ export const API_PATH = {
 
   TENANT_SETTINGS: '/settings',
 
+  TRANSACTIONS: '/transactions',
+
+  WALLET_DID: '/wallet/did',
   WALLET_DID_PUBLIC: '/wallet/did/public',
   WALLET_DID_CREATE: '/wallet/did/create',
 
