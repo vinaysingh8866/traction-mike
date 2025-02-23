@@ -19,7 +19,7 @@
 
 ## What is Traction?
 
-Traction is a digital wallet solution comprised of plugins layered on top of Hyperledger Aries Cloud Agent Python (ACA-Py) and streamlines the process of sending and receiving digital credentials for governments and organizations.
+Traction is a digital wallet solution comprised of plugins layered on top of OpenWallet Foundation ACA-Py and streamlines the process of sending and receiving digital credentials for governments and organizations.
 
 Its open-source foundation makes it easy to integrate digital trust technology into existing lines of business applications, without having to stand up, maintain and manage an instance of ACA-Py themselves. Future functionality could include machine-readable governance and more.
 
@@ -43,7 +43,7 @@ Establish your own Traction tenant in a B.C. Government sandbox to issue, hold, 
 Traction makes it easier to integrate digital trust technology into existing line of business applications.
 
 - **API-first Architecture**: Traction is designed with an API-first architecture, this RESTful API allows for integration into existing line-of-business applications already being used by organizations, the Tenant user interface is built on this API to enable adoption prior to integration and for low-use functions.
-- **Enhanced Interoperability**: Hyperledger Aries makes Traction more broadly compatible with existing technologies used by governments and organizations around the world.
+- **Enhanced Interoperability**: OWF ACA-Py makes Traction more broadly compatible with existing technologies used by governments and organizations around the world.
 - **Multi-tenancy**: Rather than having multiple digital tools to integrate with organizations, one scalable instance of Traction can be used to participate in the digital trust ecosystem, control all connections, and more easily share data.
 - **Higher Scalability**: Traction is open-source technology, encouraging collaborative refinement, faster release, and higher scalability.
 
@@ -52,7 +52,6 @@ Traction makes it easier to integrate digital trust technology into existing lin
 
 - [ACA-Py + plugins](./plugins/README.md)
 - [Tenant UI](./services/tenant-ui/README.md)
-- [Endorser Services](./services/endorser/README.md)
 
 
 ## Start contributing to Traction
@@ -104,15 +103,6 @@ git rebase origin/main
 git push --force
 ```
 
-## Who is maintaining Traction?
-[The Province of British Columbia](https://github.com/bcgov/) is maintaining Traction as an open-source project.
-
-Maintainer(s):
-- Jason Sherman
-- Jason Syrotuck
-- Lucas O'Neil
-- Jamie Popkin
-
 ## How is Traction licensed?
 
 Traction is licensed under Apache License 2.0 which can be reviewed [here](./LICENSE).
@@ -121,5 +111,4 @@ Traction is licensed under Apache License 2.0 which can be reviewed [here](./LIC
 ## Engage with the community
 
 Connect with others
-- on Discord: [EMDT Public Discord Channel](https://discord.com/channels/766403442599657522/854432442382680104)
-- for Aries discussion see the Hyperlerger Aries Github [participation section](https://github.com/hyperledger/aries#project-participation)
+- for ACA-Py discussion see the OWF ACA-Py Github [for links to discussion forums](https://github.com/openwallet-foundation/acapy?tab=readme-ov-file#troubleshooting)

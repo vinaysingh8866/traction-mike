@@ -1,4 +1,6 @@
+## @param nameOverride String to override the helm chart name, second part of the prefix
 nameOverride: ""
+## @param fullnameOverride String to fully override the helm chart name, full prefix. *Must be provided if using a custom release name that does not include the word traction.*
 fullnameOverride: ""
 ingressSuffix: "digicred.services"
 acapy:
@@ -96,14 +98,40 @@ acapy:
     max_connections: 10
     wallet_scheme: DatabasePerWallet
   ## @section Wallet Storage Credentials
+  ##  Specifies the storage credentials to use for the wallet.
+  ##  This is required if you are for using 'postgres_storage' wallet 'storage type.
+  ##  For example, '{"account":"postgres","password":"mysecretpassword","admin_account":"postgres","admin_password":"mysecretpassword"}'.
+  ##  This configuration maps to the indy sdk postgres plugin (PostgresCredential).
+  ##  NOTE: admin_user must have the CREATEDB role or else initialization will fail.
+  ##
+  ## @param acapy.walletStorageCredentials.json Raw json with database credentials. Overrides all other values including postgres subchart values. e.g.: '{"account":"postgres","password":"mysecretpassword","admin_account":"postgres","admin_password":"mysecretpassword"}'
+  ## @param acapy.walletStorageCredentials.account Database account name.
+  ## @param acapy.walletStorageCredentials.password Database password.
+  ## @param acapy.walletStorageCredentials.admin_account Database account with CREATEDB role used to create additional databases per wallet.
+  ## @param acapy.walletStorageCredentials.admin_password Database password for admin account.
+  ## @param acapy.walletStorageCredentials.existingSecret Name of an existing secret containing database user, password, and admin password.
+  ## @param acapy.walletStorageCredentials.secretKeys.adminPasswordKey Key in existing secret containing admin account password.
+  ## @param acapy.walletStorageCredentials.secretKeys.userPasswordKey Key in existing secret containing account password.
+  ##
   walletStorageCredentials:
-    json: ''
+    json: ""
     account: acapy
     admin_account: postgres
     existingSecret: ""
     secretKeys:
-      adminPasswordKey: admin-password
-      userPasswordKey: database-password
+      adminPasswordKey: postgres-password
+      userPasswordKey: password
+  ## @section ACA-Py Multitenancy Configuration
+  ##  Specifies the multitenancy config.
+  ##  Possible values: wallet_type, wallet_name, wallet_key, cache_size, 'key_derivation_method.
+  ##  "wallet_name" is only used when "wallet_type" is "askar-profile"
+  ##
+  ## @param acapy.multitenancyConfiguration.json Raw json with config. Overrides all other values including subchart values. e.g.: '{"wallet_type":"single-wallet-askar", "wallet_name":"askar-wallet"}'
+  ## @param acapy.multitenancyConfiguration.wallet_type Database account name.
+  ##
+  multitenancyConfiguration:
+    json: ""
+    wallet_type: single-wallet-askar
   ## @section Acapy Plugins
   plugins:
     basicmessageStorage: true
@@ -157,9 +185,7 @@ acapy:
     size: 1Gi
   ## @section Acapy common configurations
   resources:
-    limits:
-      cpu: 300m
-      memory: 300Mi
+    limits: {}
     requests:
       cpu: 120m
       memory: 200Mi
@@ -217,13 +243,20 @@ acapy:
 
   secret:
     adminApiKey:
+      ## @param acapy.secret.adminApiKey.existingSecret Name of an existing secret to use. Must contain `jwt`, `adminApiKey`, and `webhookapi` keys.
+      existingSecret: ""
       ## @param acapy.secret.adminApiKey.generated Generate admin api key
       ##
       generated: false
       ## @param acapy.secret.adminApiKey.value Override admin api key
       ##
       value: "digicred-me"
+    walletKey:
+      ## @param acapy.secret.walletKey.existingSecret Name of an existing secret to use. Must contain `walletKey` key.
+      existingSecret: ""
     pluginInnkeeper:
+      ## @param acapy.secret.pluginInnkeeper.existingSecret Name of an existing secret to use. Must contain `tenantid`, and `walletkey` keys.
+      existingSecret: ""
       ## @param acapy.secret.pluginInnkeeper.generated Generate plugin innkeeper secret values
       ##
       generated: false
@@ -278,9 +311,7 @@ tenant_proxy:
         termination: edge
       wildcardPolicy: None
   resources:
-    limits:
-      cpu: 100m
-      memory: 50Mi
+    limits: {}
     requests:
       cpu: 10m
       memory: 50Mi
@@ -304,7 +335,11 @@ ui:
   enabled: true
   showOIDCReservationLogin: false
   quickConnectEndorserName: ""
+  ## @param ui.requireEmailForReservation Whether the Email field is needed for a tenant reservation
+  ## If false will default not.applicable@example.com to API
   requireEmailForReservation: true
+  ## @param ui.lokiUrl The endpoint to stream loki logs from for the Tenant UI
+  lokiUrl: ""
   image:
     repository: ghcr.io/honeymodi55/traction-tenant-ui
     pullPolicy: IfNotPresent
@@ -349,7 +384,8 @@ ui:
       countdownSeconds: 30
     reservationForm: >-
       {}
-    extraQueryParams: '{}'
+    ## @param ui.oidc.extraQueryParams
+    extraQueryParams: "{}"
 
   ## SMTP Configuration
   smtp:
@@ -385,9 +421,7 @@ ui:
       namespaceSelector: {}
       podSelector: {}
   resources:
-    limits:
-      cpu: 300m
-      memory: 128Mi
+    limits: {}
     requests:
       cpu: 10m
       memory: 80Mi
@@ -464,12 +498,16 @@ postgresql:
   fullnameOverride: ""
   architecture: standalone
   auth:
+    ## @param postgresql.auth.enablePostgresUser Assign a password to the "postgres" admin user. Otherwise, remote access will be blocked for this user. Not recommended for production deployment.
+    ##
     enablePostgresUser: true
     existingSecret: '{{ include "global.fullname" . }}'
     secretKeys:
       adminPasswordKey: admin-password
       userPasswordKey: database-password
     database: traction
+    ## @param postgresql.auth.username Name for a custom user to create
+    ##
     username: acapy
 
   ## PostgreSQL Primary parameters
@@ -483,9 +521,7 @@ postgresql:
     podSecurityContext:
       enabled: false
     resources:
-      limits:
-        cpu: 500m
-        memory: 500Mi
+      limits: {}
       requests:
         cpu: 100m
         memory: 100Mi
