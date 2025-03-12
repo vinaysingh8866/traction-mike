@@ -5,7 +5,7 @@ WORKDIR /usr/src/app
 COPY . .
 
 # Install Bash
-RUN apt-get update && apt-get install -y bash
+RUN apk update && apk add bash
 
 # Install backend libraries
 RUN npm cache clean --force && npm ci --verbose
