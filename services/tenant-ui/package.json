@@ -25,6 +25,7 @@
     "jose": "^5.9.6",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.10.0",
+    "tenant-ui": "file:",
     "ws": "^8.18.0"
   },
   "devDependencies": {

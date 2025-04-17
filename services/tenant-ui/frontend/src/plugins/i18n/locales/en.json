@@ -17,6 +17,10 @@
     "credentialOffered": "Credential offer sent, student need to accept the ID on their wallet",
     "return": "Return to onboarding of next student"
   },
+  "workflow":{
+    "workflow": "Workflow",
+    "add": "Add Workflow"
+  },
   "bulkIssue": {
     "bulkIssue": "Bulk Issue",
     "totalConnections": "Total Connections: {count}",

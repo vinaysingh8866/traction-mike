@@ -39,6 +39,11 @@ const sidebarItems = [
     route: '/onboarding',
   },
   {
+    label: t('workflow.workflow'),
+    icon: 'pi pi-fw pi-file-edit',
+    route: '/workflow-list',
+  },
+  {
     label: t('connect.connections.connections'),
     icon: 'pi pi-fw pi-users',
     items: [

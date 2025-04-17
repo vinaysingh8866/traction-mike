@@ -1,9 +1,9 @@
 @use "sass:color";
 
 // Theme variables
-$tenant-ui-primary-color: #003366; // Main color blocks
+$tenant-ui-primary-color: #6666CC; // Main color blocks
 $tenant-ui-text-on-primary: #ffffff;
-$tenant-ui-secondary-color: #3c5973; // Buttons, actions
+$tenant-ui-secondary-color: #6666ccde; // Buttons, actions
 $tenant-ui-accent-color: #fcba19;
 $tenant-ui-secondary-active: color.adjust($tenant-ui-secondary-color, $lightness: -10%);
 $tenant-ui-shadow: color.adjust($tenant-ui-secondary-color, $lightness: 30%);
@@ -16,7 +16,7 @@ $tenant-ui-text-warning: #cf9605;
 $tenant-ui-link-color: #3a5b8b;
 $tenant-ui-button-link-color: #385A8A;
 
-// Backgrounds/ borders
+// Backgrounds/ borders 
 $tenant-ui-panel-back-color: #F8F9FA;
 $tenant-ui-panel-border-color: #DEE2E6;
 $tenant-ui-card-info-color: #D7DEE8;
