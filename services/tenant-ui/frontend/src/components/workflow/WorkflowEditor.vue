@@ -72,7 +72,8 @@
   
   const states = ref<State[]>(jsonData.states as State[]);
 
-  console.log("WorkflowEditor jsonData: ",jsonData);
+  console.log("States : ",states.value);
+
   watch(jsonData, (newValue) => {
     try { Object.assign(jsonData,newValue) } catch (error) { console.error("Invalid JSON:", error); }
   });

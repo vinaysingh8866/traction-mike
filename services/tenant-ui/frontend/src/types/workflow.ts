@@ -24,6 +24,7 @@ export interface Workflow {
     displayData: DisplayDataItem[];
     transitions: Transition[];
     actions: Record<string, any>[];
+    name: string;
   }
   
   export type DisplayDataItem = ImageData | TitleData | TextData | ButtonData;
