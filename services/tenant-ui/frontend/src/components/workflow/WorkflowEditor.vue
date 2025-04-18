@@ -8,11 +8,11 @@
       <!-- Left Panel -->
       <div class="json-panel" ref="leftPane">
         <div class="toolbar">
-          <span class="title">{{jsonData.name}}</span>
+          <span class="title">{{workflowName}}</span>
         </div>
   
         <div class="json-editor">
-          <JsonEditorVue v-bind="jsonEditorSettings" v-model="jsonData" style="height: 65vh;" />
+          <JsonEditorVue v-bind="jsonEditorSettings" v-model="jsonData" @update:modelValue="onEditorUpdate" :stringified="false" style="height: 65vh;" />
         </div>
       </div>
       <div class="resizer vertical" @mousedown="e => startResize(e, 'vertical')"></div>
@@ -20,7 +20,9 @@
       <div class="workflow-card">
         <div class="top" ref="topRightPane">
           <div v-for="(state,stateID) in states" :key="stateID">
-             <WorkflowCard :data="state.displayData"/>
+             {{ console.log(`WorkflowEditor: Looping through state ${stateID}:`, JSON.stringify(state, null, 2)) }}
+             {{ console.log(`WorkflowEditor: Passing display_data for state ${stateID}:`, JSON.stringify(state.display_data, null, 2)) }} 
+             <WorkflowCard :data="state.display_data"/>
              <div class="spacer" style="height:1px"></div>
            </div>
         </div>
@@ -35,7 +37,7 @@
   </template>
   
   <script setup lang="ts">
-  import { onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
+  import { onBeforeUnmount, onMounted, reactive, ref, watch, computed } from "vue";
   import JsonEditorVue from "json-editor-vue";
   import WorkflowCard from "@/components/workflow/WorkflowRender.vue";
   import Button from "primevue/button";
@@ -67,16 +69,30 @@
   indentation: 2,
   tabSize: 2,
   };
-  let jsonData = reactive<Workflow>(workflow);
+  const jsonData = ref<Workflow>(JSON.parse(JSON.stringify(workflow)));
 
-  
-  const states = ref<State[]>(jsonData.states as State[]);
+  console.log("WorkflowEditor: Initial jsonData:", JSON.stringify(jsonData, null, 2));
 
-  console.log("States : ",states.value);
+  const states = computed(() => (jsonData.value.states ?? []) as State[]);
 
-  watch(jsonData, (newValue) => {
-    try { Object.assign(jsonData,newValue) } catch (error) { console.error("Invalid JSON:", error); }
-  });
+  console.log("WorkflowEditor: Initial states computed:", JSON.stringify(states.value, null, 2));
+
+  // Computed property for the name to help with template type inference
+  const workflowName = computed(() => jsonData.value.name);
+
+  /** Called every time <JsonEditorVue> emits update:modelValue */
+  const onEditorUpdate = (val: Workflow | string) => {
+    console.log('JSON updated ➡️', val);
+  };
+
+  // Watcher for side-effects (or additional debugging)
+  watch(
+    jsonData,
+    (newValue, oldValue) => {
+      console.log('Deep watch ➡️ ', newValue);
+    }, 
+    { deep: true } 
+  );
   
   const leftPane = ref<HTMLElement|null>(null)
   const topRightPane = ref<HTMLElement|null>(null)
@@ -152,52 +168,53 @@
   }
 
   const save = async () => {
-    const newData = JSON.parse(JSON.stringify(jsonData)); // Update the reactive `jsonData` to trigger re-render
-    Object.assign(jsonData,newData)
+    // Create a clean, non-proxied copy of the current data
+    let dataToSave;
+    try {
+      dataToSave = JSON.parse(JSON.stringify(jsonData.value));
+    } catch (error) {
+      console.error('Error creating clean data copy for saving:', error);
+      toast.error('Error preparing data for saving: Invalid JSON format.');
+      return; // Stop if data is not valid JSON
+    }
+
+    // Removed: Object.assign(jsonData,newData) - This was likely causing the error
     console.log("update:", update);
+    console.log("Saving data:", JSON.stringify(dataToSave, null, 2)); // Log the data being sent
+
     try {      
         if (webhookUrl ) {
-          if(update){
-            /* const response = await fetch(`${webhookUrl}/workflow/update-workflow`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.parse(JSON.stringify(newData)),
-            });
-            if (!response.ok) {
-              throw new Error('Network response was not ok');
-            } */
-           toast.success("Workflow Updated Successfully");
-           console.log("Workflow Data Updated with new data:", newData);
-          } else {
-            /* const response = await fetch(`${webhookUrl}/workflow/set-workflow`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.parse(JSON.stringify(newData)),
-            });
-            if (!response.ok) {
-              throw new Error('Network response was not ok');
-            } */
-           toast.success("Workflow Created Successfully");
-           console.log("Workflow Data Saved with new data:", newData);
-          }
-        /* const response = await fetch(`${webhookUrl}/workflow/set-workflows`);
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        } */
-        
+          const endpoint = update ? `${webhookUrl}/workflow/update-workflow` : `${webhookUrl}/workflow/set-workflow`;
+          const method = update ? 'PUT' : 'POST'; // Use PUT for update, POST for create
+          
+          console.log(`Sending request to ${endpoint} with method ${method}`);
+          /* const response = await fetch(endpoint, { 
+            method: method,
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(dataToSave), // Use the clean data copy
+          });
+          if (!response.ok) {
+            const errorBody = await response.text(); // Read error response body
+            console.error('Network response was not ok:', response.status, errorBody);
+            throw new Error(`Network response was not ok: ${response.status} ${errorBody}`);
+          } */
+          const successMessage = update ? "Workflow Updated Successfully" : "Workflow Created Successfully";
+          toast.success(successMessage);
+          console.log(update ? "Workflow Data Updated:" : "Workflow Data Saved:", dataToSave);
+        } else {
+          console.error('Webhook URL is missing, cannot save.');
+          toast.error('Cannot save workflow: Webhook URL is missing.');
         }
     } catch (error) {
         console.error('Error updating workflow:', error);
-         toast.error('Error updating workflow'+error);
+         toast.error(`Error updating workflow: ${error}`);
     };
   }
     
   watch(
-  () => jsonData.name,
+  () => jsonData.value.name,
   (newVal) => {
     console.log('Workflow name changed:', newVal)
   }
@@ -333,4 +350,3 @@
 
 
 </style>
-  

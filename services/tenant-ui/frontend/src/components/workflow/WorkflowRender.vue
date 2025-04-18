@@ -32,15 +32,15 @@
   </template>
   
   <script setup lang="ts">
-    import { toRef, defineProps, watchEffect } from 'vue'
+    import { toRef, defineProps, watchEffect, onMounted } from 'vue'
     import Button from 'primevue/button'
 
 
     const stateData = defineProps(['data'])
-    console.log('Data from parent:', stateData)
+    console.log('WorkflowRender: Raw props received:', JSON.stringify(stateData, null, 2))
     const displayData = toRef(() => stateData.data)
 
-    console.log('Display Data:', displayData)
+    console.log('WorkflowRender: displayData ref value:', JSON.stringify(displayData.value, null, 2))
     const defaultImage =
         'https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/Wallet_Flat_Icon.svg/512px-Wallet_Flat_Icon.svg.png'
 
@@ -105,7 +105,11 @@
   ]) */
   
     watchEffect(() => {
-        console.log('inside WatchEffect Data:', displayData.value)
+        console.log('WorkflowRender: watchEffect triggered. Current displayData:', JSON.stringify(displayData.value, null, 2))
     })
+
+    onMounted(() => {
+      console.log('WorkflowRender: Component mounted. displayData:', JSON.stringify(displayData.value, null, 2));
+    });
   </script>
   
