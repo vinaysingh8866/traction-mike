@@ -21,10 +21,11 @@ export interface Workflow {
   
   export interface State {
     stateID: string;
-    displayData: DisplayDataItem[];
+    display_data: DisplayDataItem[];
     transitions: Transition[];
     actions: Record<string, any>[];
     name: string;
+    state_id?: string;
   }
   
   export type DisplayDataItem = ImageData | TitleData | TextData | ButtonData;
